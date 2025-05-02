@@ -30,6 +30,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     path: '/ws'  // Alterando para um caminho mais simples
   });
   
+  // Disponibilize globalmente o WebSocketServer para que outros módulos possam acessá-lo
+  (global as any).wss = wss;
+  
   wss.on("connection", (ws: WebSocket) => {
     log("WebSocket client connected", "websocket");
     

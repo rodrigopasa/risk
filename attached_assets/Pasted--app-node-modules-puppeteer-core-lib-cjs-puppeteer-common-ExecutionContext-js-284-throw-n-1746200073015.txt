@@ -1,0 +1,83 @@
+/app/node_modules/puppeteer-core/lib/cjs/puppeteer/common/ExecutionContext.js:284
+
+        throw new Error('Execution context was destroyed, most likely because of a navigation.');
+
+              ^
+
+ 
+
+Error: Execution context was destroyed, most likely because of a navigation.
+
+    at rewriteError (/app/node_modules/puppeteer-core/lib/cjs/puppeteer/common/ExecutionContext.js:284:15)
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+    at async ExecutionContext._ExecutionContext_evaluate (/app/node_modules/puppeteer-core/lib/cjs/puppeteer/common/ExecutionContext.js:227:56)
+
+    at async ExecutionContext.evaluate (/app/node_modules/puppeteer-core/lib/cjs/puppeteer/common/ExecutionContext.js:107:16)
+
+    at async exposeFunctionIfAbsent (/app/node_modules/whatsapp-web.js/src/util/Puppeteer.js:14:19)
+
+    at async Client.inject (/app/node_modules/whatsapp-web.js/src/Client.js:238:9)
+
+    at async /app/node_modules/whatsapp-web.js/src/Client.js:339:13
+
+ 
+
+Node.js v20.19.1
+
+ 
+
+> rest-express@1.0.0 start
+
+> NODE_ENV=production node dist/index.js
+
+ 
+
+3:33:46 PM [whatsapp] Initializing WhatsApp client...
+
+3:33:56 PM [express] serving on port 5000
+
+3:33:56 PM [whatsapp] WhatsApp client is authenticated
+
+3:33:56 PM [websocket] WebSocket client connected
+
+3:33:56 PM [express] GET /api/whatsapp/status 304 in 8ms :: {"connected":false}
+
+3:33:57 PM [express] GET /api/whatsapp/qrcode-html 404 in 5ms :: {"error":"QR Code not available"}
+
+3:34:01 PM [websocket] WebSocket client connected
+
+3:34:06 PM [websocket] WebSocket client connected
+
+3:34:07 PM [express] GET /api/whatsapp/status 200 in 2ms :: {"connected":true}
+
+3:34:09 PM [whatsapp] WhatsApp client is authenticated
+
+3:34:11 PM [websocket] WebSocket client connected
+
+3:34:12 PM [whatsapp] WhatsApp client is ready
+
+3:34:12 PM [whatsapp] Syncing contacts from WhatsApp...
+
+3:34:13 PM [whatsapp] Error syncing contacts: [object Object]
+
+file:///app/dist/index.js:361
+
+    throw new Error(`Failed to sync contacts: ${error}`);
+
+          ^
+
+ 
+
+Error: Failed to sync contacts: [object Object]
+
+    at syncContacts (file:///app/dist/index.js:361:11)
+
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+    at async Client.<anonymous> (file:///app/dist/index.js:266:7)
+
+ 
+
+Node.js v20.19.1
