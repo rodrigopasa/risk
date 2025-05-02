@@ -29,50 +29,81 @@ export default function QRCode({ onConnect }: QRCodeProps) {
 
   // Connect WebSocket for more reliable QR code updates
   useEffect(() => {
-    if (generatingQR && !wsRef.current) {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
-      console.log('Connecting to WebSocket for QR code at:', wsUrl);
-      
-      const socket = new WebSocket(wsUrl);
-      wsRef.current = socket;
-
-      socket.onopen = () => {
-        console.log('WebSocket connected for QR code');
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'qr') {
-            console.log('Received QR code via WebSocket');
-            setQrCode(data.data);
-          } else if (data.type === 'authenticated') {
-            console.log('WhatsApp authenticated');
-            setGeneratingQR(false);
-            setQrCode(null);
-            onConnect();
-          }
-        } catch (e) {
-          console.error('Error processing WebSocket message:', e);
+    // Função para conectar ao WebSocket
+    const connectWebSocket = () => {
+      try {
+        if (wsRef.current) {
+          // Se já existe uma conexão, a fecha primeiro
+          wsRef.current.close();
+          wsRef.current = null;
         }
-      };
+        
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        console.log('Connecting to WebSocket for QR code at:', wsUrl);
+        
+        const socket = new WebSocket(wsUrl);
+        wsRef.current = socket;
 
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+        socket.onopen = () => {
+          console.log('WebSocket connected for QR code');
+        };
 
-      socket.onclose = () => {
-        console.log('WebSocket disconnected');
-        wsRef.current = null;
-      };
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'qr') {
+              console.log('Received QR code via WebSocket');
+              setQrCode(data.data);
+            } else if (data.type === 'authenticated') {
+              console.log('WhatsApp authenticated');
+              setGeneratingQR(false);
+              setQrCode(null);
+              onConnect();
+            }
+          } catch (e) {
+            console.error('Error processing WebSocket message:', e);
+          }
+        };
 
-      return () => {
-        socket.close();
-        wsRef.current = null;
-      };
+        socket.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          // Tentar reconectar após erro
+          setTimeout(() => {
+            if (generatingQR && !wsRef.current) {
+              connectWebSocket();
+            }
+          }, 3000);
+        };
+
+        socket.onclose = () => {
+          console.log('WebSocket disconnected');
+          wsRef.current = null;
+          // Tentar reconectar após desconexão
+          setTimeout(() => {
+            if (generatingQR && !wsRef.current) {
+              connectWebSocket();
+            }
+          }, 3000);
+        };
+      } catch (error) {
+        console.error('Error setting up WebSocket:', error);
+      }
+    };
+
+    // Iniciar conexão quando estiver gerando QR code
+    if (generatingQR) {
+      connectWebSocket();
     }
+
+    return () => {
+      // Limpar conexão quando o componente for desmontado
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
   }, [generatingQR, onConnect]);
 
   // Use API data if WebSocket fails

@@ -102,6 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create an HTML page with the QR code
+      // Versão muito mais simples, sem usar nenhuma biblioteca:
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -109,23 +110,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             <title>WhatsApp QR Code</title>
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
-              body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; background-color: white; }
-              h3 { margin-bottom: 20px; color: #128C7E; }
-              #qrcode-container { border: 15px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.1); background-color: white; }
-              .qr-text { font-size: 14px; color: #075E54; margin-top: 20px; }
-              .refresh-button { background-color: #25D366; color: white; border: none; padding: 10px 15px; border-radius: 5px; margin-top: 20px; cursor: pointer; }
-              .refresh-button:hover { background-color: #128C7E; }
-              .qr-raw { display: none; }
+              body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: sans-serif; background-color: white; padding: 20px; }
+              h2 { margin-bottom: 20px; color: #128C7E; }
+              .qr-container { padding: 15px; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+              .instructions { font-size: 14px; color: #075E54; margin-top: 20px; max-width: 350px; text-align: center; }
+              .refresh-btn { background-color: #25D366; color: white; border: none; padding: 10px 15px; border-radius: 5px; margin-top: 20px; cursor: pointer; font-size: 16px; }
+              .refresh-btn:hover { background-color: #128C7E; }
+              @media (max-width: 400px) {
+                .qr-img { width: 200px; height: 200px; }
+              }
             </style>
           </head>
           <body>
-            <h3>Escaneie o QR Code com seu WhatsApp</h3>
-            <div id="qrcode-container">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCode)}" alt="WhatsApp QR Code" width="300" height="300">
+            <h2>Escaneie este QR Code no WhatsApp</h2>
+            <div class="qr-container">
+              <img 
+                src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCode)}" 
+                alt="WhatsApp QR Code" 
+                width="300" 
+                height="300"
+                class="qr-img"
+              >
             </div>
-            <p class="qr-text">Para escanear, abra o WhatsApp > Menu (⋮) > Aparelhos conectados > Conectar dispositivo</p>
-            <button class="refresh-button" onclick="window.location.reload()">Atualizar QR Code</button>
-            <div class="qr-raw">${qrCode}</div>
+            <p class="instructions">
+              Abra o WhatsApp no seu celular, toque em Menu (⋮) ou Configurações, 
+              selecione Aparelhos Conectados e toque em Conectar Dispositivo
+            </p>
+            <button class="refresh-btn" onclick="window.location.reload()">
+              Atualizar QR Code
+            </button>
           </body>
         </html>
       `;
