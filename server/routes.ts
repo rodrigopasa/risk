@@ -19,6 +19,7 @@ import {
 } from "./scheduler";
 import { scheduledMessagesInsertSchema } from "@shared/schema";
 import { WebSocketServer, WebSocket } from "ws";
+import { log } from "./vite";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -26,13 +27,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up WebSocket server for real-time updates
   const wss = new WebSocketServer({ 
     server: httpServer,
-    path: '/websocket'
+    path: '/ws'  // Alterando para um caminho mais simples
   });
   
   wss.on("connection", (ws: WebSocket) => {
-    console.log("WebSocket client connected");
+    log("WebSocket client connected", "websocket");
+    
+    // Enviar o QR code atual para o cliente recém conectado, se disponível
+    const currentQrCode = getQRCode();
+    if (currentQrCode) {
+      log("Sending current QR code to new client", "websocket");
+      ws.send(JSON.stringify({ type: "qr", data: currentQrCode }));
+    }
+    
     ws.on("message", (message: Buffer) => {
-      console.log("Received message:", message.toString());
+      log("Received message: " + message.toString(), "websocket");
     });
   });
 
@@ -40,8 +49,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await initializeWhatsApp(
     (qr: string) => {
       // Broadcast QR code to all connected clients
+      log("Received new QR code, broadcasting to clients", "whatsapp");
       wss.clients.forEach((client: WebSocket) => {
         if (client.readyState === WebSocket.OPEN) {
+          log("Sending QR code to client", "websocket");
           client.send(JSON.stringify({ type: "qr", data: qr }));
         }
       });

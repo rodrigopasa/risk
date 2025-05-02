@@ -32,7 +32,7 @@ export default function QRCode({ onConnect }: QRCodeProps) {
   useEffect(() => {
     if (generatingQR && !wsRef.current) {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/websocket`;
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
       console.log('Connecting to WebSocket for QR code at:', wsUrl);
       
       const socket = new WebSocket(wsUrl);

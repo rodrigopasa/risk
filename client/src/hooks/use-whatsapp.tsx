@@ -74,7 +74,7 @@ export function WhatsAppProvider({ children }: { children: ReactNode }) {
   // WebSocket connection for real-time updates
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/websocket`;
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
     console.log('Connecting to WhatsApp Provider WebSocket at:', wsUrl);
     
     // Only create a new socket if we're on the main page
