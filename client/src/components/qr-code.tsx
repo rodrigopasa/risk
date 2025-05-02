@@ -119,18 +119,11 @@ export default function QRCode({ onConnect }: QRCodeProps) {
                 <Skeleton className="w-full h-full" />
               ) : qrCode ? (
                 <div className="w-full h-full flex items-center justify-center">
-                  {qrCode && (
-                    <>
-                      <QRCodeCanvas 
-                        value={qrCode}
-                        size={240}
-                        level="H"
-                        includeMargin={true}
-                        className="w-full h-full"
-                      />
-                      <div className="sr-only">QR Code para WhatsApp: {qrCode}</div>
-                    </>
-                  )}
+                  <iframe 
+                    src="/api/whatsapp/qrcode-html" 
+                    className="w-full h-full border-0"
+                    title="WhatsApp QR Code"
+                  ></iframe>
                 </div>
               ) : (
                 <p className="text-gray-400">QR Code não disponível</p>
