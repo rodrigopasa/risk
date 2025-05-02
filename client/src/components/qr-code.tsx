@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 
 interface QRCodeProps {
   onConnect: () => void;
