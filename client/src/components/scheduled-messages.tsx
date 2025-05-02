@@ -33,7 +33,12 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ScheduledMessage } from "@shared/schema";
+import { ScheduledMessage, Contact } from "@shared/schema";
+
+// Interface estendida para mensagens agendadas que inclui o contato relacionado
+interface ScheduledMessageWithContact extends ScheduledMessage {
+  contact: Contact;
+}
 
 interface ScheduledMessagesProps {
   onClose: () => void;
@@ -49,7 +54,7 @@ export default function ScheduledMessages({ onClose }: ScheduledMessagesProps) {
     data: scheduledMessages = [], 
     isLoading,
     error
-  } = useQuery<ScheduledMessage[]>({
+  } = useQuery<ScheduledMessageWithContact[]>({
     queryKey: ['/api/messages/scheduled'],
   });
 
@@ -130,13 +135,13 @@ export default function ScheduledMessages({ onClose }: ScheduledMessagesProps) {
                   <TableRow key={message.id}>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className={`flex-shrink-0 h-8 w-8 rounded-full ${message.contact.isGroup ? 'bg-indigo-500' : 'bg-whatsapp-lightgreen'} text-white flex items-center justify-center`}>
+                        <div className={`flex-shrink-0 h-8 w-8 rounded-full ${message.contact?.isGroup ? 'bg-indigo-500' : 'bg-whatsapp-lightgreen'} text-white flex items-center justify-center`}>
                           <span className="text-xs">
-                            {message.contact.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                            {message.contact?.name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'N/A'}
                           </span>
                         </div>
                         <div className="ml-2">
-                          <div className="text-sm font-medium text-gray-900">{message.contact.name}</div>
+                          <div className="text-sm font-medium text-gray-900">{message.contact?.name || 'Destinatário'}</div>
                         </div>
                       </div>
                     </TableCell>

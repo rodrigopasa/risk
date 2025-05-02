@@ -50,7 +50,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar dependências
-RUN npm ci
+# Usar npm install em vez de npm ci para garantir que as novas dependências sejam adicionadas
+RUN npm install
 
 # Copiar o resto dos arquivos
 COPY . .
