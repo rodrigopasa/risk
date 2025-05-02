@@ -92,6 +92,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: error.message });
     }
   });
+  
+  // Get QR code as HTML data URI (for direct viewing)
+  app.get("/api/whatsapp/qrcode-html", async (req, res) => {
+    try {
+      const qrCode = await getQRCode();
+      if (!qrCode) {
+        return res.status(404).json({ error: "QR Code not available" });
+      }
+      
+      // Create an HTML page with the QR code
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>WhatsApp QR Code</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: sans-serif; }
+              h3 { margin-bottom: 20px; }
+              #qrcode { border: 15px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            </style>
+          </head>
+          <body>
+            <h3>Escaneie o QR Code com seu WhatsApp</h3>
+            <div id="qrcode"></div>
+            <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.0/build/qrcode.min.js"></script>
+            <script>
+              QRCode.toCanvas(document.getElementById('qrcode'), \`${qrCode}\`, {
+                width: 256,
+                margin: 2,
+                color: {
+                  dark: '#25D366',
+                  light: '#FFFFFF'
+                }
+              }, function(error) {
+                if (error) console.error(error);
+              });
+            </script>
+          </body>
+        </html>
+      `;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(htmlContent);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   // Get all contacts
   app.get("/api/contacts", async (req, res) => {

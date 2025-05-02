@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 
 interface QRCodeProps {
   onConnect: () => void;
@@ -25,7 +25,7 @@ export default function QRCode({ onConnect }: QRCodeProps) {
   } = useQuery<{ qrCode: string }>({
     queryKey: ['/api/whatsapp/qrcode'],
     enabled: generatingQR && !qrCode,
-    refetchInterval: (generatingQR && !qrCode) ? 10000 : false,
+    refetchInterval: (generatingQR && !qrCode) ? 5000 : false,
   });
 
   // Connect WebSocket for more reliable QR code updates
@@ -118,13 +118,20 @@ export default function QRCode({ onConnect }: QRCodeProps) {
               isLoading && !qrCode ? (
                 <Skeleton className="w-full h-full" />
               ) : qrCode ? (
-                <QRCodeSVG 
-                  value={qrCode}
-                  size={240}
-                  level="H"
-                  includeMargin={true}
-                  className="w-full h-full"
-                />
+                <div className="w-full h-full flex items-center justify-center">
+                  {qrCode && (
+                    <>
+                      <QRCodeCanvas 
+                        value={qrCode}
+                        size={240}
+                        level="H"
+                        includeMargin={true}
+                        className="w-full h-full"
+                      />
+                      <div className="sr-only">QR Code para WhatsApp: {qrCode}</div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <p className="text-gray-400">QR Code não disponível</p>
               )
@@ -140,6 +147,22 @@ export default function QRCode({ onConnect }: QRCodeProps) {
           >
             {generatingQR ? "Gerando QR Code..." : "Iniciar Conexão"}
           </Button>
+          
+          {generatingQR && !qrCode && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-600 mb-1">
+                Se o QR code não aparecer, você pode visualizá-lo clicando abaixo:
+              </p>
+              <a 
+                href="/api/whatsapp/qrcode-html" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Ver QR Code em nova aba
+              </a>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
