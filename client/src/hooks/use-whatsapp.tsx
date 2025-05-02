@@ -75,47 +75,54 @@ export function WhatsAppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/websocket`;
-    console.log('Connecting to WebSocket at:', wsUrl);
-    const socket = new WebSocket(wsUrl);
+    console.log('Connecting to WhatsApp Provider WebSocket at:', wsUrl);
+    
+    // Only create a new socket if we're on the main page
+    // (this prevents duplicating the socket with QR code component)
+    if (!window.location.pathname.includes('/qr-code')) {
+      const socket = new WebSocket(wsUrl);
 
-    socket.onopen = () => {
-      console.log('WebSocket connected');
-    };
+      socket.onopen = () => {
+        console.log('WhatsApp Provider WebSocket connected');
+      };
 
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'message') {
-          // Add incoming message to state
-          setMessages(prevMessages => [...prevMessages, data.data]);
-        } else if (data.type === 'authenticated') {
-          setConnected(true);
-          refetchStatus();
-          queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
-          queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'message') {
+            // Add incoming message to state
+            setMessages(prevMessages => [...prevMessages, data.data]);
+          } else if (data.type === 'authenticated') {
+            setConnected(true);
+            refetchStatus();
+            queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
+          }
+        } catch (e) {
+          console.error('Error processing WebSocket message:', e);
         }
-      } catch (e) {
-        console.error('Error processing WebSocket message:', e);
-      }
-    };
+      };
 
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      toast({
-        title: "WebSocket Error",
-        description: "Failed to establish real-time connection",
-        variant: "destructive",
-      });
-    };
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        toast({
+          title: "Erro de Conexão",
+          description: "Falha ao estabelecer conexão em tempo real",
+          variant: "destructive",
+        });
+      };
 
-    socket.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
+      socket.onclose = () => {
+        console.log('WebSocket disconnected');
+      };
 
-    return () => {
-      socket.close();
-    };
+      return () => {
+        socket.close();
+      };
+    }
+    
+    return undefined;
   }, [toast, refetchStatus]);
 
   // Connect to WhatsApp

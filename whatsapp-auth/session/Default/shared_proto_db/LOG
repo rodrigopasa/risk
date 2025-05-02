@@ -1,3 +1,3 @@
-2025/05/02-15:05:32.706 386 Reusing MANIFEST /home/runner/workspace/whatsapp-auth/session/Default/shared_proto_db/MANIFEST-000001
-2025/05/02-15:05:32.708 386 Recovering log #3
-2025/05/02-15:05:32.708 386 Reusing old log /home/runner/workspace/whatsapp-auth/session/Default/shared_proto_db/000003.log 
+2025/05/02-15:22:01.032 9a8 Reusing MANIFEST /home/runner/workspace/whatsapp-auth/session/Default/shared_proto_db/MANIFEST-000001
+2025/05/02-15:22:01.032 9a8 Recovering log #3
+2025/05/02-15:22:01.032 9a8 Reusing old log /home/runner/workspace/whatsapp-auth/session/Default/shared_proto_db/000003.log 

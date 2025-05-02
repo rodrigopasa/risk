@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { QRCodeSVG } from "qrcode.react";
 
 interface QRCodeProps {
   onConnect: () => void;
@@ -11,9 +12,11 @@ interface QRCodeProps {
 
 export default function QRCode({ onConnect }: QRCodeProps) {
   const [generatingQR, setGeneratingQR] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
   const { toast } = useToast();
+  const wsRef = useRef<WebSocket | null>(null);
 
-  // Get QR code data
+  // Get QR code data via API (fallback)
   const { 
     data: qrCodeData,
     isLoading,
@@ -21,15 +24,70 @@ export default function QRCode({ onConnect }: QRCodeProps) {
     refetch
   } = useQuery<{ qrCode: string }>({
     queryKey: ['/api/whatsapp/qrcode'],
-    enabled: generatingQR,
-    refetchInterval: generatingQR ? 10000 : false,
+    enabled: generatingQR && !qrCode,
+    refetchInterval: (generatingQR && !qrCode) ? 10000 : false,
   });
+
+  // Connect WebSocket for more reliable QR code updates
+  useEffect(() => {
+    if (generatingQR && !wsRef.current) {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/websocket`;
+      console.log('Connecting to WebSocket for QR code at:', wsUrl);
+      
+      const socket = new WebSocket(wsUrl);
+      wsRef.current = socket;
+
+      socket.onopen = () => {
+        console.log('WebSocket connected for QR code');
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          if (data.type === 'qr') {
+            console.log('Received QR code via WebSocket');
+            setQrCode(data.data);
+          } else if (data.type === 'authenticated') {
+            console.log('WhatsApp authenticated');
+            setGeneratingQR(false);
+            setQrCode(null);
+            onConnect();
+          }
+        } catch (e) {
+          console.error('Error processing WebSocket message:', e);
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      socket.onclose = () => {
+        console.log('WebSocket disconnected');
+        wsRef.current = null;
+      };
+
+      return () => {
+        socket.close();
+        wsRef.current = null;
+      };
+    }
+  }, [generatingQR, onConnect]);
+
+  // Use API data if WebSocket fails
+  useEffect(() => {
+    if (qrCodeData?.qrCode && !qrCode) {
+      setQrCode(qrCodeData.qrCode);
+    }
+  }, [qrCodeData, qrCode]);
 
   const handleInitiateConnection = async () => {
     setGeneratingQR(true);
     toast({
-      title: "Generating QR Code",
-      description: "Please wait while we generate a QR code for WhatsApp connection.",
+      title: "Gerando QR Code",
+      description: "Aguarde enquanto geramos o QR code para conexão com o WhatsApp.",
       duration: 5000,
     });
     await refetch();
@@ -38,8 +96,8 @@ export default function QRCode({ onConnect }: QRCodeProps) {
   useEffect(() => {
     if (isError) {
       toast({
-        title: "Error Generating QR Code",
-        description: "There was an error generating the QR code. Please try again.",
+        title: "Erro ao Gerar QR Code",
+        description: "Houve um erro ao gerar o QR code. Por favor, tente novamente.",
         variant: "destructive",
       });
       setGeneratingQR(false);
@@ -55,14 +113,16 @@ export default function QRCode({ onConnect }: QRCodeProps) {
             Escaneie o QR code com seu WhatsApp para conectar
           </p>
           
-          <div className="w-48 h-48 mx-auto bg-white flex items-center justify-center border">
+          <div className="w-64 h-64 mx-auto bg-white flex items-center justify-center border p-2">
             {generatingQR ? (
-              isLoading ? (
+              isLoading && !qrCode ? (
                 <Skeleton className="w-full h-full" />
-              ) : qrCodeData?.qrCode ? (
-                <img 
-                  src={`data:image/png;base64,${btoa(qrCodeData.qrCode)}`} 
-                  alt="WhatsApp QR Code" 
+              ) : qrCode ? (
+                <QRCodeSVG 
+                  value={qrCode}
+                  size={240}
+                  level="H"
+                  includeMargin={true}
                   className="w-full h-full"
                 />
               ) : (
