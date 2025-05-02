@@ -19,7 +19,7 @@ export default function QRCode({ onConnect }: QRCodeProps) {
     isLoading,
     isError,
     refetch
-  } = useQuery({
+  } = useQuery<{ qrCode: string }>({
     queryKey: ['/api/whatsapp/qrcode'],
     enabled: generatingQR,
     refetchInterval: generatingQR ? 10000 : false,

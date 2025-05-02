@@ -33,6 +33,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ScheduledMessage } from "@shared/schema";
 
 interface ScheduledMessagesProps {
   onClose: () => void;
@@ -48,7 +49,7 @@ export default function ScheduledMessages({ onClose }: ScheduledMessagesProps) {
     data: scheduledMessages = [], 
     isLoading,
     error
-  } = useQuery({
+  } = useQuery<ScheduledMessage[]>({
     queryKey: ['/api/messages/scheduled'],
   });
 

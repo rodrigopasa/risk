@@ -1,0 +1,68 @@
+client/src/components/chat-area.tsx(23,27): error TS2461: Type '{}' is not an array type.
+
+
+client/src/components/contact-list.tsx(35,29): error TS2461: Type 'unknown' is not an array type.
+
+
+client/src/components/contact-list.tsx(35,71): error TS2461: Type 'unknown' is not an array type.
+
+client/src/components/contact-list.tsx(109,17): error TS18046: 'contacts' is of type 'unknown'.
+
+
+client/src/components/contact-list.tsx(113,18): error TS18046: 'contacts' is of type 'unknown'.
+
+
+client/src/components/contact-list.tsx(114,27): error TS7006: Parameter 'contact' implicitly has an 'any' type.
+
+
+client/src/components/contact-list.tsx(115,27): error TS7006: Parameter 'contact' implicitly has an 'any' type.
+
+
+client/src/components/contact-list.tsx(119,24): error TS7006: Parameter 'contact' implicitly has an 'any' type.
+
+
+client/src/components/contact-list.tsx(128,58): error TS7006: Parameter 'n' implicitly has an 'any' type.
+
+
+client/src/components/contact-list.tsx(161,17): error TS18046: 'groups' is of type 'unknown'.
+
+
+client/src/components/contact-list.tsx(165,18): error TS18046: 'groups' is of type 'unknown'.
+
+client/src/components/contact-list.tsx(166,27): error TS7006: Parameter 'group' implicitly has an 'any' type.
+
+
+client/src/components/contact-list.tsx(167,27): error TS7006: Parameter 'group' implicitly has an 'any' type.
+
+
+client/src/components/contact-list.tsx(170,24): error TS7006: Parameter 'group' implicitly has an 'any' type.
+
+
+client/src/components/contact-list.tsx(179,56): error TS7006: Parameter 'n' implicitly has an 'any' type.
+
+client/src/components/qr-code.tsx(62,31): error TS2339: Property 'qrCode' does not exist on type '{}'.
+
+
+client/src/components/qr-code.tsx(64,65): error TS2339: Property 'qrCode' does not exist on type '{}'.
+
+
+client/src/components/scheduled-messages.tsx(112,15): error TS18046: 'scheduledMessages' is of type 'unknown'.
+
+
+client/src/components/scheduled-messages.tsx(128,18): error TS18046: 'scheduledMessages' is of type 'unknown'.
+
+
+client/src/components/scheduled-messages.tsx(128,41): error TS7006: Parameter 'message' implicitly has an 'any' type.
+
+
+client/src/components/scheduled-messages.tsx(134,66): error TS7006: Parameter 'n' implicitly has an 'any' type.
+
+
+client/src/components/ui/sidebar.tsx(6,10): error TS2724: '"@/hooks/use-mobile"' has no exported member named 'useIsMobile'. Did you mean 'useMobile'?
+
+
+server/scheduler.ts(1,60): error TS7016: Could not find a declaration file for module 'node-schedule'. '/app/node_modules/node-schedule/index.js' implicitly has an 'any' type.
+
+  Try `npm i --save-dev @types/node-schedule` if it exists or add a new declaration (.d.ts) file containing `declare module 'node-schedule';`
+
+server/vite.ts(39,5): error TS2322: Type '{ middlewareMode: boolean; hmr: { server: Server<typeof IncomingMessage, typeof ServerResponse>; }; allowedHosts: boolean; }' is not assignable to type 'ServerOptions'.

@@ -19,7 +19,7 @@ export default function ContactList({ onSelectContact }: ContactListProps) {
   const { 
     data: contacts = [],
     isLoading: isLoadingContacts,
-  } = useQuery({
+  } = useQuery<Contact[]>({
     queryKey: ['/api/contacts'],
   });
   
@@ -27,7 +27,7 @@ export default function ContactList({ onSelectContact }: ContactListProps) {
   const { 
     data: groups = [],
     isLoading: isLoadingGroups,
-  } = useQuery({
+  } = useQuery<Contact[]>({
     queryKey: ['/api/groups'],
   });
 
