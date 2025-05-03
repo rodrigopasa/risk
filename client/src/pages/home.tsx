@@ -23,56 +23,8 @@ export default function Home() {
     refetchInterval: 10000,
   });
 
-  // Set up WebSocket connection for real-time updates
-  useEffect(() => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}`;
-    const socket = new WebSocket(wsUrl);
-
-    socket.onopen = () => {
-      console.log('WebSocket connected');
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        switch (data.type) {
-          case 'qr':
-            // QR code received
-            console.log('QR code received');
-            break;
-          case 'authenticated':
-            // WhatsApp authenticated
-            console.log('WhatsApp authenticated');
-            toast({
-              title: "WhatsApp Connected",
-              description: "Your WhatsApp account is now connected.",
-              duration: 3000,
-            });
-            break;
-          case 'message':
-            // New message received
-            console.log('New message:', data.data);
-            break;
-        }
-      } catch (e) {
-        console.error('Error processing WebSocket message:', e);
-      }
-    };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    socket.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
-
-    return () => {
-      socket.close();
-    };
-  }, [toast]);
+  // Removendo a conexão WebSocket duplicada
+  // Estamos usando o hook useWhatsAppContext para lidar com as atualizações em tempo real
 
   const handleContactSelect = (contact: Contact) => {
     setSelectedContact(contact);
