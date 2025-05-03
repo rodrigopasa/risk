@@ -25,7 +25,11 @@ export function AIConfigDialog({ contact }: AIConfigDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="h-9 w-9 border-pazap-dark-orange hover:bg-pazap-dark-orange/20 hover:text-pazap-dark-orange text-orange-500"
+        >
           <BrainCog className="h-5 w-5" />
         </Button>
       </DialogTrigger>

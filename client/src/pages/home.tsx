@@ -51,7 +51,9 @@ export default function Home() {
               <span className={`h-3 w-3 rounded-full mr-2 ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
               <span>{connected ? 'Conectado' : 'Desconectado'}</span>
             </div>
-            <AIConfigDialog contact={selectedContact || undefined} />
+            <div className="flex items-center">
+              <AIConfigDialog contact={selectedContact || undefined} />
+            </div>
             <button 
               onClick={logout} 
               className="bg-pazap-dark-border hover:bg-pazap-dark-orange transition-colors rounded-md px-3 py-1 text-sm"
