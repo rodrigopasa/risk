@@ -37,7 +37,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <WhatsAppProvider>
-          <div className="flex flex-col min-h-screen">
+          <div className="flex flex-col min-h-screen dark-mode">
             <main className="flex-grow">
               <Router />
             </main>

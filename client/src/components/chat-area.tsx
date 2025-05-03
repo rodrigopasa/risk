@@ -34,16 +34,16 @@ export default function ChatArea({ contact, messages }: ChatAreaProps) {
   return (
     <>
       {/* Conversation Header */}
-      <div className="bg-white p-3 border-b border-gray-300 flex items-center">
+      <div className="bg-pazap-surface border-b border-pazap p-3 flex items-center">
         <div className="flex items-center flex-1">
-          <div className={`h-10 w-10 rounded-full ${contact.isGroup ? 'bg-indigo-500' : 'bg-whatsapp-lightgreen'} text-white flex items-center justify-center mr-3`}>
+          <div className={`h-10 w-10 rounded-full ${contact.isGroup ? 'bg-pazap-blue' : 'bg-pazap-orange'} text-white flex items-center justify-center mr-3 animate-pulse`}>
             <span className="font-semibold">
               {contact.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
             </span>
           </div>
           <div>
-            <h3 className="font-medium">{contact.name}</h3>
-            <p className="text-xs text-gray-500">
+            <h3 className="font-medium text-pazap-dark-text">{contact.name}</h3>
+            <p className="text-xs text-pazap-dark-text-secondary">
               {contact.isGroup 
                 ? `${contact.participants?.length || 0} participantes` 
                 : 'Contato'}
@@ -51,35 +51,35 @@ export default function ChatArea({ contact, messages }: ChatAreaProps) {
           </div>
         </div>
         <div>
-          <button className="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors">
+          <button className="p-2 rounded-full text-pazap-dark-text hover:bg-pazap-dark-surface transition-colors">
             <Maximize2 className="h-5 w-5" />
           </button>
         </div>
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 bg-whatsapp-chatbg">
+      <div className="flex-1 overflow-y-auto p-4 bg-pazap-dark-bg">
         {allMessages.length === 0 ? (
-          <div className="flex justify-center items-center h-full text-gray-500">
+          <div className="flex justify-center items-center h-full text-pazap-dark-text-secondary">
             <p>Nenhuma mensagem ainda. Comece a conversar!</p>
           </div>
         ) : (
           allMessages.map((message) => (
             <div 
               key={message.id} 
-              className={`flex ${message.fromMe ? 'justify-end' : 'justify-start'} mb-3`}
+              className={`flex ${message.fromMe ? 'justify-end' : 'justify-start'} mb-3 animate-fade-in`}
             >
               <div 
                 className={`rounded-lg py-2 px-3 max-w-md ${
                   message.fromMe 
-                    ? 'bg-whatsapp-lightgreen text-white' 
-                    : 'bg-white text-black'
+                    ? 'bg-pazap-orange text-white' 
+                    : 'bg-pazap-dark-surface text-pazap-dark-text'
                 }`}
               >
                 <div dangerouslySetInnerHTML={{ __html: message.content }} />
                 <span 
                   className={`text-xs block text-right mt-1 ${
-                    message.fromMe ? 'text-green-100' : 'text-gray-500'
+                    message.fromMe ? 'text-white text-opacity-80' : 'text-pazap-dark-text-secondary'
                   }`}
                 >
                   {formatDistanceToNow(new Date(message.timestamp), { 

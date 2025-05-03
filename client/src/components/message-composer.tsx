@@ -245,7 +245,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
 
   return (
     <>
-      <div className="bg-white p-3 border-t border-gray-300">
+      <div className="bg-pazap-dark-surface p-3 border-t border-pazap-dark-border">
         {/* Media preview area */}
         {showMediaPreview && mediaFiles.length > 0 && (
           <div className="mb-3 overflow-x-auto whitespace-nowrap">
