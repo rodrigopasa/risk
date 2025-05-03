@@ -7,6 +7,7 @@ import MessageComposer from "@/components/message-composer";
 import ScheduledMessages from "@/components/scheduled-messages";
 import { useWhatsAppContext } from "@/hooks/use-whatsapp";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Contact } from "@shared/schema";
 
 export default function Home() {
@@ -84,15 +85,25 @@ export default function Home() {
     setShowScheduledMessages(!showScheduledMessages);
   };
 
+  const { logout } = useAuth();
+
   return (
-    <div className="flex flex-col h-screen bg-whatsapp-bg">
+    <div className="flex flex-col h-screen bg-pazap-bg animate-fade-in">
       {/* Header */}
-      <header className="bg-whatsapp-green text-white p-4 shadow-md">
+      <header className="bg-gradient-to-r from-pazap-orange to-pazap-blue text-white p-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">WhatsApp Messaging System</h1>
-          <div className="flex items-center">
-            <span className={`h-3 w-3 rounded-full mr-2 ${connected ? 'bg-green-500' : 'bg-red-500'}`}></span>
-            <span>{connected ? 'Conectado' : 'Desconectado'}</span>
+          <h1 className="text-2xl font-bold gradient-text">PaZap</h1>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <span className={`h-3 w-3 rounded-full mr-2 ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
+              <span>{connected ? 'Conectado' : 'Desconectado'}</span>
+            </div>
+            <button 
+              onClick={logout} 
+              className="bg-white/20 hover:bg-white/30 transition-colors rounded-md px-3 py-1 text-sm"
+            >
+              Sair
+            </button>
           </div>
         </div>
       </header>
@@ -100,7 +111,7 @@ export default function Home() {
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="bg-white w-80 flex flex-col border-r border-gray-300 h-full">
+        <aside className="bg-white/90 w-80 flex flex-col border-r border-orange-100 h-full shadow-md">
           {/* QR Code Section */}
           {!connected && (
             <QRCode onConnect={handleConnectWhatsApp} />
@@ -110,10 +121,10 @@ export default function Home() {
           <ContactList onSelectContact={handleContactSelect} />
 
           {/* Scheduled Messages Button */}
-          <div className="p-3 border-t border-gray-200">
+          <div className="p-3 border-t border-orange-100">
             <button 
               onClick={toggleScheduledMessages}
-              className="w-full flex items-center justify-center bg-gray-100 text-whatsapp-green px-4 py-2 rounded-md hover:bg-gray-200 transition-colors"
+              className="w-full flex items-center justify-center bg-pazap-blue text-white px-4 py-2 rounded-md hover:bg-pazap-blue-light transition-colors shadow-md"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -134,16 +145,30 @@ export default function Home() {
               <MessageComposer contact={selectedContact} />
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white text-center px-4">
-              <div className="mb-8">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-24 w-24 text-whatsapp-green mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+            <div className="flex-1 flex flex-col items-center justify-center bg-white/90 text-center px-4 animate-fade-in">
+              <div className="mb-8 animate-pulse">
+                <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-pazap-orange to-pazap-blue flex items-center justify-center text-white text-5xl font-bold">
+                  PZ
+                </div>
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-gray-800">Sistema de Mensagens WhatsApp</h2>
+              <h2 className="text-2xl font-bold mb-2 text-pazap-orange">Sistema de Mensagens PaZap</h2>
               <p className="text-gray-600 max-w-lg">
                 Conecte-se usando o QR code no painel lateral. Selecione um contato ou grupo para enviar mensagens ou agendar envios para um momento específico.
               </p>
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
+                <div className="bg-pazap-orange/10 p-4 rounded-lg border border-pazap-orange/20 animate-slide-in" style={{animationDelay: '0.1s'}}>
+                  <h3 className="text-pazap-orange font-semibold mb-2">Envios Imediatos</h3>
+                  <p className="text-sm">Envie mensagens de texto, imagens e links para seus contatos em tempo real.</p>
+                </div>
+                <div className="bg-pazap-blue/10 p-4 rounded-lg border border-pazap-blue/20 animate-slide-in" style={{animationDelay: '0.2s'}}>
+                  <h3 className="text-pazap-blue font-semibold mb-2">Agendamentos</h3>
+                  <p className="text-sm">Programe o envio de mensagens para qualquer horário, até mesmo para daqui alguns minutos.</p>
+                </div>
+                <div className="bg-gradient-to-br from-pazap-orange/10 to-pazap-blue/10 p-4 rounded-lg border border-pazap-orange/20 animate-slide-in" style={{animationDelay: '0.3s'}}>
+                  <h3 className="gradient-text font-semibold mb-2">Integração</h3>
+                  <p className="text-sm">Acesse todos os seus contatos e grupos diretamente do WhatsApp.</p>
+                </div>
+              </div>
             </div>
           )}
         </main>

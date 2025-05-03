@@ -72,9 +72,7 @@ export type Message = typeof messages.$inferSelect;
 
 export const scheduledMessagesInsertSchema = createInsertSchema(scheduledMessages, {
   content: (schema) => schema.min(1, "Message content is required"),
-  scheduledTime: (schema) => schema.refine(val => new Date(val) > new Date(), {
-    message: "Scheduled time must be in the future"
-  })
+  // Removida a validação que exigia horário futuro
 });
 export type ScheduledMessageInsert = z.infer<typeof scheduledMessagesInsertSchema>;
 export type ScheduledMessage = typeof scheduledMessages.$inferSelect;

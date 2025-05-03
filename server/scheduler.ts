@@ -189,8 +189,48 @@ function scheduleMessageJob(message: ScheduledMessage) {
   try {
     const scheduledTime = new Date(message.scheduledTime);
     
-    // Only schedule if the scheduled time is in the future
-    if (scheduledTime > new Date()) {
+    // Verificar se a data de agendamento é no passado ou muito próxima
+    const now = new Date();
+    const isInPast = scheduledTime < now;
+    const isVeryNear = (scheduledTime.getTime() - now.getTime() < 5000);
+    
+    // Se for no passado ou muito próximo (menos de 5 segundos no futuro),
+    // executar imediatamente
+    if (isInPast || isVeryNear) {
+      log(`Mensagem ${message.id} agendada para executar imediatamente`, 'scheduler');
+      
+      // Executar a mensagem imediatamente (após 1 segundo)
+      setTimeout(async () => {
+        try {
+          log(`Executando mensagem ${message.id} imediatamente`, 'scheduler');
+          
+          // Enviar a mensagem
+          await sendMessage(
+            message.contactId,
+            message.content,
+            message.mediaUrls || []
+          );
+          
+          // Atualizar o status da mensagem
+          await storage.updateScheduledMessage(message.id, {
+            status: 'sent'
+          });
+          
+          // Tratar mensagens recorrentes
+          if (message.recurring && message.recurring !== 'none') {
+            await scheduleRecurringMessage(message);
+          }
+        } catch (error) {
+          log(`Erro ao executar mensagem ${message.id}: ${error}`, 'scheduler');
+          
+          // Marcar como falha
+          await storage.updateScheduledMessage(message.id, {
+            status: 'failed'
+          });
+        }
+      }, 1000);
+    } else {
+      // Agendar normalmente para datas futuras
       const job = scheduleJob(scheduledTime, async () => {
         try {
           log(`Executing scheduled message ${message.id}`, 'scheduler');
@@ -227,11 +267,6 @@ function scheduleMessageJob(message: ScheduledMessage) {
       
       // Store the job in the map
       scheduledJobsMap.set(message.id, job);
-    } else {
-      // Mark as expired if the scheduled time is in the past
-      storage.updateScheduledMessage(message.id, {
-        status: 'expired'
-      });
     }
   } catch (error) {
     log(`Error scheduling job for message ${message.id}: ${error}`, 'scheduler');

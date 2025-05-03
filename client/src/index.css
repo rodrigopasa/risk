@@ -13,13 +13,15 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 158 92% 31%;
+    /* Laranja como cor primária */
+    --primary: 27 96% 61%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    /* Azul como cor secundária */
+    --secondary: 210 96% 61%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 210 40% 96.1%;
+    --muted: 27 20% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
     --accent: 210 40% 96.1%;
@@ -30,25 +32,27 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 27 96% 61%;
 
     --radius: 0.5rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222.2 22% 8%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 22% 12%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 22% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 158 92% 31%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Laranja como cor primária no modo escuro */
+    --primary: 27 90% 55%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    /* Azul como cor secundária no modo escuro */
+    --secondary: 210 90% 55%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
@@ -62,7 +66,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 27 90% 55%;
   }
 }
 
@@ -76,37 +80,115 @@
   }
 }
 
-/* WhatsApp theme colors */
+/* PaZap theme colors */
 :root {
-  --whatsapp-green: #128C7E;
-  --whatsapp-lightgreen: #25D366;
-  --whatsapp-blue: #34B7F1;
-  --whatsapp-bg: #f0f2f5;
-  --whatsapp-chatbg: #e5ded8;
+  --pazap-orange: #FF8C21;
+  --pazap-orange-light: #FFA94D;
+  --pazap-blue: #2186FF;
+  --pazap-blue-light: #4D9FFF;
+  --pazap-bg: #f5f5ff;
+  --pazap-chatbg: #FFF5E8;
 }
 
-.bg-whatsapp-green {
-  background-color: var(--whatsapp-green);
+.bg-pazap-orange {
+  background-color: var(--pazap-orange);
 }
 
-.bg-whatsapp-lightgreen {
-  background-color: var(--whatsapp-lightgreen);
+.bg-pazap-orange-light {
+  background-color: var(--pazap-orange-light);
 }
 
-.bg-whatsapp-blue {
-  background-color: var(--whatsapp-blue);
+.bg-pazap-blue {
+  background-color: var(--pazap-blue);
 }
 
-.bg-whatsapp-bg {
-  background-color: var(--whatsapp-bg);
+.bg-pazap-blue-light {
+  background-color: var(--pazap-blue-light);
 }
 
-.bg-whatsapp-chatbg {
-  background-color: var(--whatsapp-chatbg);
+.bg-pazap-bg {
+  background-color: var(--pazap-bg);
 }
 
-.text-whatsapp-green {
-  color: var(--whatsapp-green);
+.bg-pazap-chatbg {
+  background-color: var(--pazap-chatbg);
+}
+
+.text-pazap-orange {
+  color: var(--pazap-orange);
+}
+
+.text-pazap-blue {
+  color: var(--pazap-blue);
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInRight 0.5s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, var(--pazap-orange) 0%, var(--pazap-blue) 100%);
+  background-size: 200% auto;
+  animation: gradientShift 5s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
 }
 
 /* Customize Quill editor for WhatsApp style */
