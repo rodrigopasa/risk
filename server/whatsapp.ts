@@ -2,7 +2,7 @@ import whatsappWeb from "whatsapp-web.js";
 const { Client, LocalAuth } = whatsappWeb;
 import { db } from "@db";
 import { contacts, messages } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, ne } from "drizzle-orm";
 import { log } from "./vite"; 
 
 let client: typeof Client.prototype | null = null;
@@ -171,13 +171,13 @@ export async function initializeWhatsApp(
 async function syncContacts() {
   try {
     if (!client || !client.info) {
-      throw new Error("WhatsApp client is not ready");
+      throw new Error("Cliente WhatsApp não está pronto para sincronização");
     }
 
-    log("Syncing contacts from WhatsApp...", "whatsapp");
+    log("Sincronizando contatos do WhatsApp...", "whatsapp");
     
     try {
-      // Inserir pelo menos um contato padrão para evitar problemas quando não há contatos
+      // Primeiro inserimos um contato padrão para evitar problemas de UI
       const defaultContact = {
         name: "Meus Contatos",
         phoneNumber: "default",
@@ -186,115 +186,192 @@ async function syncContacts() {
         participants: []
       };
       
-      const existingDefault = await db.query.contacts.findFirst({
-        where: eq(contacts.phoneNumber, "default")
-      });
-      
-      if (!existingDefault) {
-        await db.insert(contacts).values(defaultContact);
-        log("Inserted default contact", "whatsapp");
+      try {
+        const existingDefault = await db.query.contacts.findFirst({
+          where: eq(contacts.phoneNumber, "default")
+        });
+        
+        if (!existingDefault) {
+          await db.insert(contacts).values(defaultContact);
+          log("Contato padrão inserido", "whatsapp");
+        }
+      } catch (defaultError) {
+        log(`Erro verificando contato padrão: ${defaultError}`, "whatsapp");
+        // Tenta inserir de qualquer forma
+        try {
+          await db.insert(contacts).values(defaultContact);
+        } catch (insertError) {
+          log(`Erro ao inserir contato padrão: ${insertError}`, "whatsapp");
+        }
       }
       
-      // Tente obter alguns contatos, mas não falhe se houver problemas
+      // Limpa contatos antigos e sincroniza contatos atuais do número conectado
       try {
+        log("Iniciando sincronização de contatos individuais", "whatsapp");
+        
+        // Tenta limpar contatos antigos para evitar informações desatualizadas
+        // Mas preserva o contato padrão
+        try {
+          await db.delete(contacts).where(
+            and(
+              ne(contacts.phoneNumber, "default"),
+              eq(contacts.isGroup, false)
+            )
+          );
+          log("Contatos antigos removidos para garantir dados atualizados", "whatsapp");
+        } catch (deleteError) {
+          log(`Erro ao limpar contatos antigos: ${deleteError}`, "whatsapp");
+          // Continua mesmo se não conseguir limpar
+        }
+        
+        // Obtém contatos do número de WhatsApp conectado
         const whatsappContacts = await client.getContacts();
-        log(`Got ${whatsappContacts.length} contacts from WhatsApp`, "whatsapp");
+        log(`Obtidos ${whatsappContacts.length} contatos do número conectado ao WhatsApp`, "whatsapp");
+        
+        // Processa em lotes menores para evitar sobrecarga
+        const validContacts = whatsappContacts.filter(contact => 
+          contact.id?.user && contact.id.user !== "status");
+        
+        log(`Encontrados ${validContacts.length} contatos válidos para sincronização`, "whatsapp");
         
         let processedCount = 0;
         
-        for (const contact of whatsappContacts) {
-          try {
-            // Skip if not a valid contact
-            if (!contact.id?.user || contact.id.user === "status") continue;
-            
-            // Format the phone number with country code
-            const phoneNumber = `${contact.id._serialized}`;
-            
-            // Check if contact already exists
-            const existingContact = await db.query.contacts.findFirst({
-              where: eq(contacts.phoneNumber, phoneNumber)
-            });
-            
-            if (!existingContact) {
+        // Processa contatos em lotes menores para evitar sobrecarga
+        for (let i = 0; i < validContacts.length; i += 5) {
+          const batch = validContacts.slice(i, i + 5);
+          
+          for (const contact of batch) {
+            try {
+              // Formata o número de telefone
+              const phoneNumber = `${contact.id._serialized}`;
+              
+              // Tenta obter foto de perfil
               let profilePicUrl = null;
               try {
                 if (typeof contact.getProfilePicUrl === 'function') {
                   profilePicUrl = await contact.getProfilePicUrl() || null;
                 }
               } catch (picError) {
-                log(`Could not get profile pic for contact: ${picError}`, "whatsapp");
+                log(`Erro ao obter foto de perfil: ${picError}`, "whatsapp");
               }
               
-              // Insert new contact
-              await db.insert(contacts).values({
-                name: contact.name || contact.pushname || phoneNumber,
-                phoneNumber: phoneNumber,
-                profilePicUrl: profilePicUrl,
-                isGroup: false,
-                participants: []
-              });
-              
-              processedCount++;
+              // Insere o novo contato diretamente (já que limpamos anteriormente)
+              try {
+                await db.insert(contacts).values({
+                  name: contact.name || contact.pushname || phoneNumber,
+                  phoneNumber: phoneNumber,
+                  profilePicUrl: profilePicUrl,
+                  isGroup: false,
+                  participants: []
+                });
+                processedCount++;
+              } catch (insertError) {
+                log(`Erro ao inserir contato: ${insertError}`, "whatsapp");
+                
+                // Em caso de erro de duplicidade, tenta atualizar
+                try {
+                  await db.update(contacts)
+                    .set({
+                      name: contact.name || contact.pushname || phoneNumber,
+                      profilePicUrl: profilePicUrl
+                    })
+                    .where(eq(contacts.phoneNumber, phoneNumber));
+                } catch (updateError) {
+                  log(`Erro ao atualizar contato: ${updateError}`, "whatsapp");
+                }
+              }
+            } catch (contactError) {
+              log(`Erro processando contato: ${contactError}`, "whatsapp");
+              continue;
             }
-          } catch (contactError) {
-            log(`Error processing individual contact: ${contactError}`, "whatsapp");
-            // Continue with next contact
-            continue;
           }
+          
+          // Pequena pausa entre lotes para evitar sobrecarga
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         
-        log(`Successfully processed ${processedCount} contacts`, "whatsapp");
+        log(`Processados ${processedCount} contatos do número conectado`, "whatsapp");
       } catch (contactsError) {
-        log(`Error getting contacts list: ${contactsError}`, "whatsapp");
-        // Don't throw, continue with other operations
+        log(`Erro ao sincronizar contatos: ${contactsError}`, "whatsapp");
       }
       
-      // Attempt to sync groups, but don't fail if there's an issue
+      // Limpa grupos antigos e sincroniza grupos atuais
       try {
+        log("Iniciando sincronização de grupos", "whatsapp");
+        
+        // Tenta limpar grupos antigos para evitar informações desatualizadas
+        try {
+          await db.delete(contacts).where(eq(contacts.isGroup, true));
+          log("Grupos antigos removidos para garantir dados atualizados", "whatsapp");
+        } catch (deleteError) {
+          log(`Erro ao limpar grupos antigos: ${deleteError}`, "whatsapp");
+          // Continua mesmo se não conseguir limpar
+        }
+
+        // Obtém todos os chats (incluindo grupos) do número conectado
         const chats = await client.getChats();
         const groups = chats.filter(chat => chat.isGroup);
-        log(`Got ${groups.length} groups from WhatsApp`, "whatsapp");
+        log(`Obtidos ${groups.length} grupos do número conectado ao WhatsApp`, "whatsapp");
         
-        for (const group of groups) {
-          try {
-            if (!group.id?._serialized) continue;
-            
-            const phoneNumber = `${group.id._serialized}`;
-            
-            // Check if group already exists
-            const existingGroup = await db.query.contacts.findFirst({
-              where: eq(contacts.phoneNumber, phoneNumber)
-            });
-            
-            if (!existingGroup) {
-              await db.insert(contacts).values({
-                name: group.name || "Grupo",
-                phoneNumber: phoneNumber,
-                profilePicUrl: null,
-                isGroup: true,
-                participants: []
-              });
+        let groupCount = 0;
+        
+        // Processa grupos em lotes para melhor performance
+        for (let i = 0; i < groups.length; i += 5) {
+          const batch = groups.slice(i, i + 5);
+          
+          for (const group of batch) {
+            try {
+              if (!group.id?._serialized) continue;
+              
+              const phoneNumber = `${group.id._serialized}`;
+              
+              // Tentar obter participantes do grupo, se disponível na API
+              let participants = [];
+              try {
+                // Método alternativo para obter participantes dependendo da versão da API
+                if (group._data && group._data.participants) {
+                  participants = group._data.participants.map((p: any) => p.id);
+                } else if ((group as any).participants) {
+                  participants = (group as any).participants.map((p: any) => p.id?._serialized || p.id);
+                }
+              } catch (participantsError) {
+                log(`Erro ao obter participantes do grupo: ${participantsError}`, "whatsapp");
+              }
+              
+              // Insere o grupo no banco de dados
+              try {
+                await db.insert(contacts).values({
+                  name: group.name || "Grupo",
+                  phoneNumber: phoneNumber,
+                  profilePicUrl: null,
+                  isGroup: true,
+                  participants: participants
+                });
+                groupCount++;
+              } catch (insertError) {
+                log(`Erro ao inserir grupo: ${insertError}`, "whatsapp");
+              }
+            } catch (groupError) {
+              log(`Erro processando grupo: ${groupError}`, "whatsapp");
+              continue;
             }
-          } catch (groupError) {
-            log(`Error processing individual group: ${groupError}`, "whatsapp");
-            // Continue with next group
-            continue;
           }
+          
+          // Pequena pausa entre lotes para evitar sobrecarga
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
+        
+        log(`Processados ${groupCount} grupos do número conectado`, "whatsapp");
       } catch (groupsError) {
-        log(`Error getting groups list: ${groupsError}`, "whatsapp");
-        // Don't throw, we've at least tried to sync what we can
+        log(`Erro ao sincronizar grupos: ${groupsError}`, "whatsapp");
       }
     } catch (syncError) {
-      log(`Non-fatal error during contact sync: ${syncError}`, "whatsapp");
-      // Don't rethrow, we want the app to continue working even if contact sync fails
+      log(`Erro não fatal durante sincronização: ${syncError}`, "whatsapp");
     }
     
-    log("Contact sync completed", "whatsapp");
+    log("Sincronização de contatos concluída", "whatsapp");
   } catch (error) {
-    log(`Error in syncContacts main function: ${error}`, "whatsapp");
-    // Don't throw the error, just log it. This way the app can continue working
-    // even if contact sync fails
+    log(`Erro na função principal syncContacts: ${error}`, "whatsapp");
   }
 }
 
