@@ -342,10 +342,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all scheduled messages
   app.get("/api/messages/scheduled", async (req, res) => {
     try {
+      log("Carregando mensagens agendadas...", "express");
       const scheduled = await getAllScheduledMessages();
+      
+      // Log das mensagens carregadas
+      log(`Mensagens agendadas carregadas: ${JSON.stringify(scheduled)}`, "express");
       
       // Se não houver mensagens agendadas, retornar array vazio
       if (!scheduled || scheduled.length === 0) {
+        log("Nenhuma mensagem agendada encontrada", "express");
         return res.json([]);
       }
       

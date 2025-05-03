@@ -116,8 +116,16 @@ export default function ScheduledMessages({ onClose }: ScheduledMessagesProps) {
               Erro ao carregar mensagens agendadas
             </div>
           ) : scheduledMessages.length === 0 ? (
-            <div className="text-center py-8 text-pazap-dark-text-secondary">
-              Nenhuma mensagem agendada
+            <div className="text-center py-12 px-4">
+              <div className="mx-auto w-20 h-20 mb-4 text-pazap-dark-orange opacity-30">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2 text-pazap-dark-text">Nenhuma mensagem agendada</h3>
+              <p className="text-pazap-dark-text-secondary max-w-md mx-auto">
+                Você ainda não possui mensagens agendadas para envio. Para agendar uma mensagem, selecione um contato e use o ícone de calendário no campo de mensagem.
+              </p>
             </div>
           ) : (
             <Table className="border-pazap-dark-border">
