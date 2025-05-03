@@ -164,24 +164,25 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
       return;
     }
     
-    // Criar a data ajustada para o fuso horário de São Paulo (GMT-3)
-    const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+    // Criar a data com o horário local do usuário
+    const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}:00`);
     
-    // Fuso horário de São Paulo é GMT-3, aplicamos o offset manualmente
-    // Esta linha é importante para garantir que o horário seja interpretado 
-    // corretamente como horário de São Paulo
-    scheduledDateTime.setHours(scheduledDateTime.getHours() - 3);
+    // Não aplicamos mais o ajuste de fuso horário aqui, pois isso estava causando
+    // o problema com a validação de data
     
     const now = new Date();
     
-    // Adicionar 1 minuto para permitir agendamento imediato mas evitar problemas
+    // Adicionar 15 segundos (em vez de 1 minuto) para permitir agendamento imediato mas evitar problemas
     // com envio retroativo (dá um pequeno buffer para processamento)
-    const minimumScheduleTime = new Date(now.getTime() + 60000);
+    const minimumScheduleTime = new Date(now.getTime() + 15000);
     
-    if (scheduledDateTime < minimumScheduleTime) {
+    console.log('Data agendada:', scheduledDateTime);
+    console.log('Data mínima permitida:', minimumScheduleTime);
+    
+    if (scheduledDateTime.getTime() < minimumScheduleTime.getTime()) {
       toast({
         title: "Data inválida",
-        description: "A data de agendamento deve ser pelo menos 1 minuto no futuro",
+        description: "A data de agendamento deve ser pelo menos 15 segundos no futuro",
         variant: "destructive",
       });
       return;

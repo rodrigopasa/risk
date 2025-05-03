@@ -191,7 +191,13 @@ function scheduleMessageJob(message: ScheduledMessage) {
     
     // Verificar se a data de agendamento é no passado ou muito próxima
     const now = new Date();
-    const isInPast = scheduledTime < now;
+    
+    // Imprimir data e hora para debug
+    console.log('Data/hora agendada:', scheduledTime.toISOString());
+    console.log('Data/hora atual:', now.toISOString());
+    
+    // Ajuste de comparação para considerar somente milissegundos
+    const isInPast = scheduledTime.getTime() < now.getTime();
     const isVeryNear = (scheduledTime.getTime() - now.getTime() < 5000);
     
     // Se for no passado ou muito próximo (menos de 5 segundos no futuro),
