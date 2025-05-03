@@ -220,7 +220,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
           return reject(new Error("Falha ao ler arquivo"));
         }
         
-        const img = new Image();
+        const img = document.createElement('img');
         img.onload = () => {
           try {
             // Definir dimensão máxima (1200px para manter qualidade razoável)

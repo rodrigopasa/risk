@@ -69,5 +69,9 @@ RUN mkdir -p /app/whatsapp-auth && chmod -R 777 /app/whatsapp-auth
 ENV NODE_ENV=production
 ENV PORT=5000
 
-# Comando para iniciar o aplicativo
-CMD ["npm", "start"]
+# Copiar e tornar executável o script de inicialização
+COPY startup.sh /app/startup.sh
+RUN chmod +x /app/startup.sh
+
+# Comando para iniciar o aplicativo usando o script
+CMD ["/app/startup.sh"]
