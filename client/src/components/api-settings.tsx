@@ -4,11 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Key, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle2, Key, RefreshCw, MessageSquare } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { GlobalAutoResponder } from "@/components/global-auto-responder";
 
 export function ApiSettings() {
   const [openAIKey, setOpenAIKey] = useState("");
@@ -83,9 +84,10 @@ export function ApiSettings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 w-[400px]">
+        <TabsList className="grid grid-cols-3 w-[600px]">
           <TabsTrigger value="openai">OpenAI</TabsTrigger>
           <TabsTrigger value="google">Google</TabsTrigger>
+          <TabsTrigger value="autoresponder">Auto-Resposta Global</TabsTrigger>
         </TabsList>
 
         <TabsContent value="openai" className="mt-4">
@@ -265,6 +267,10 @@ export function ApiSettings() {
               </Button>
             </CardFooter>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="autoresponder" className="mt-4">
+          <GlobalAutoResponder />
         </TabsContent>
       </Tabs>
     </div>
