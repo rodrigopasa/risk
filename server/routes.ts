@@ -204,6 +204,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json([]);
     }
   });
+  
+  // Get messages for a specific contact
+  app.get("/api/contacts/:contactId/messages", async (req, res) => {
+    try {
+      const contactId = parseInt(req.params.contactId);
+      
+      if (isNaN(contactId)) {
+        return res.status(400).json({ error: "ID de contato inválido" });
+      }
+      
+      try {
+        // Buscar mensagens do banco de dados
+        // Utilizamos a função do storage que já tem toda a lógica necessária
+        const messages = await storage.getMessagesForContact(contactId);
+        
+        // Ordenar mensagens por timestamp (mais antigas primeiro)
+        const sortedMessages = messages.sort((a, b) => {
+          return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+        });
+        
+        log(`Retornando ${sortedMessages.length} mensagens para o contato ${contactId}`, "express");
+        res.json(sortedMessages);
+      } catch (dbError: any) {
+        log(`Erro do banco de dados ao buscar mensagens: ${dbError.message}`, "express");
+        // Em caso de erro, retornamos array vazio
+        res.json([]);
+      }
+    } catch (error: any) {
+      log(`Erro geral ao buscar mensagens: ${error.message}`, "express");
+      // Retornar array vazio em vez de erro 500
+      res.json([]);
+    }
+  });
 
   // Send message
   app.post("/api/messages/send", async (req, res) => {

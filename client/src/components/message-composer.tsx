@@ -23,8 +23,19 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [scheduledTime, setScheduledTime] = useState("");
+  
+  // Inicializar a data com a data de hoje
+  const today = new Date();
+  const formattedDate = today.toISOString().split('T')[0];
+  
+  // Inicializar o horário com o horário atual + 2 minutos
+  const nextMinutes = new Date(today.getTime() + 2 * 60000);
+  const hours = nextMinutes.getHours().toString().padStart(2, '0');
+  const minutes = nextMinutes.getMinutes().toString().padStart(2, '0');
+  const formattedTime = `${hours}:${minutes}`;
+  
+  const [scheduledDate, setScheduledDate] = useState(formattedDate);
+  const [scheduledTime, setScheduledTime] = useState(formattedTime);
   const [recurring, setRecurring] = useState("none");
   const [mediaFiles, setMediaFiles] = useState<string[]>([]);
   const [showMediaPreview, setShowMediaPreview] = useState(false);
@@ -416,7 +427,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
                 type="date"
                 value={scheduledDate}
                 onChange={(e) => setScheduledDate(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
+                // Não vamos usar a restrição de data mínima para permitir agendamento para qualquer data
               />
             </div>
             <div className="space-y-2">
