@@ -20,7 +20,8 @@ export default function ChatArea({ contact, messages }: ChatAreaProps) {
   });
 
   // Combine passed messages with fetched ones
-  const allMessages = [...(fetchedMessages || []), ...messages].sort(
+  const combinedMessages = Array.isArray(fetchedMessages) ? fetchedMessages : [];
+  const allMessages = [...combinedMessages, ...messages].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 

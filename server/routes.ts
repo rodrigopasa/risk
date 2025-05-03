@@ -299,7 +299,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/messages/scheduled", async (req, res) => {
     try {
       const scheduled = await getAllScheduledMessages();
-      res.json(scheduled || []);
+      
+      // Se não houver mensagens agendadas, retornar array vazio
+      if (!scheduled || scheduled.length === 0) {
+        return res.json([]);
+      }
+      
+      // Para cada mensagem agendada, buscar o contato correspondente
+      const scheduledWithContacts = await Promise.all(
+        scheduled.map(async (message) => {
+          try {
+            // Tentar obter o contato
+            let contact;
+            
+            // Se for um grupo (ID >= 1000), buscar nos grupos
+            if (message.contactId >= 1000) {
+              const groups = await getGroups();
+              const groupIndex = message.contactId - 1000;
+              contact = groupIndex >= 0 && groupIndex < groups.length 
+                ? groups[groupIndex] 
+                : { id: message.contactId, name: 'Grupo não encontrado', phoneNumber: 'desconhecido' };
+            } else {
+              // Buscar nos contatos regulares
+              const contacts = await getContacts();
+              contact = message.contactId < contacts.length 
+                ? contacts[message.contactId] 
+                : { id: message.contactId, name: 'Contato não encontrado', phoneNumber: 'desconhecido' };
+            }
+            
+            // Retornar a mensagem com o contato
+            return {
+              ...message,
+              contact
+            };
+          } catch (error) {
+            // Em caso de erro, usar um contato padrão
+            return {
+              ...message,
+              contact: { 
+                id: message.contactId, 
+                name: 'Erro ao carregar contato', 
+                phoneNumber: 'erro' 
+              }
+            };
+          }
+        })
+      );
+      
+      res.json(scheduledWithContacts);
+      
     } catch (error: any) {
       log(`Erro ao obter mensagens agendadas: ${error.message}`, "express");
       // Retornar array vazio em vez de erro 500
