@@ -81,16 +81,18 @@ export const storage = {
   
   async getAllScheduledMessages() {
     try {
-      log("Buscando todas as mensagens agendadas diretamente do banco...", "storage");
+      log("Buscando todas as mensagens agendadas do banco de dados...", "storage");
       
-      // Método alternativo: buscar mensagens diretamente sem tentar carregar relações
-      const messages = await db.select().from(scheduledMessages).orderBy(asc(scheduledMessages.scheduledTime));
+      const messages = await db.select().from(scheduledMessages);
       
-      log(`Encontradas ${messages.length} mensagens agendadas (método direto)`, "storage");
-      
+      log(`Encontradas ${messages.length} mensagens agendadas`, "storage");
       return messages;
     } catch (error) {
-      log(`Erro no storage ao obter mensagens agendadas: ${error}`, "storage");
+      if (error instanceof Error) {
+        log(`Erro no storage ao obter mensagens agendadas: ${error.message}`, "storage");
+      } else {
+        log(`Erro no storage ao obter mensagens agendadas: ${String(error)}`, "storage");
+      }
       return [];
     }
   },
