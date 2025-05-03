@@ -1,0 +1,61 @@
+12:17 AM [whatsapp] WhatsApp client is authenticated
+
+1:12:17 AM [whatsapp] Broadcasting authenticated state to WebSocket clients
+
+1:12:18 AM [whatsapp] WhatsApp client is ready
+
+1:12:18 AM [whatsapp] Syncing contacts from WhatsApp...
+
+1:12:19 AM [whatsapp] Non-fatal error during contact sync: [object Object]
+
+1:12:19 AM [whatsapp] Contact sync completed
+
+1:12:21 AM [websocket] WebSocket client connected
+
+1:12:24 AM [express] GET /api/whatsapp/status 200 in 6ms :: {"connected":true}
+
+1:12:29 AM [websocket] WebSocket client connected
+
+1:12:51 AM [express] GET /api/whatsapp/status 200 in 14ms :: {"connected":true}
+
+1:12:51 AM [whatsapp] Error getting groups: [object Object]
+
+1:12:51 AM [express] GET /api/groups 500 in 202ms :: {"error":"Failed to get groups: [object Object]…
+
+1:12:51 AM [whatsapp] Error getting contacts: [object Object]
+
+1:12:51 AM [express] GET /api/contacts 500 in 213ms :: {"error":"Failed to get contacts: [object Obj…
+
+1:12:54 AM [express] GET /api/whatsapp/status 304 in 18ms :: {"connected":true}
+
+1:12:54 AM [whatsapp] Error getting groups: [object Object]
+
+1:12:54 AM [express] GET /api/groups 500 in 51ms :: {"error":"Failed to get groups: [object Object]"}
+
+1:12:54 AM [whatsapp] Error getting contacts: [object Object]
+
+1:12:54 AM [express] GET /api/contacts 500 in 162ms :: {"error":"Failed to get contacts: [object Obj…
+
+1:12:56 AM [express] GET /api/whatsapp/status 304 in 19ms :: {"connected":true}
+
+1:12:56 AM [whatsapp] Error getting contacts: [object Object]
+
+1:12:56 AM [express] GET /api/contacts 500 in 55ms :: {"error":"Failed to get contacts: [object Obje…
+
+1:12:56 AM [whatsapp] Error getting groups: [object Object]
+
+1:12:56 AM [express] GET /api/groups 500 in 68ms :: {"error":"Failed to get groups: [object Object]"}
+
+1:12:57 AM [express] GET /api/whatsapp/status 304 in 6ms :: {"connected":true}
+
+1:12:57 AM [whatsapp] Error getting contacts: [object Object]
+
+1:12:57 AM [express] GET /api/contacts 500 in 55ms :: {"error":"Failed to get contacts: [object Obje…
+
+1:12:57 AM [whatsapp] Error getting groups: [object Object]
+
+1:12:57 AM [express] GET /api/groups 500 in 255ms :: {"error":"Failed to get groups: [object Object]…
+
+1:13:00 AM [scheduler] Error getting scheduled messages: [object Object]
+
+1:13:00 AM [express] GET /api/messages/scheduled 500 in 150ms :: {"error":"Failed to get scheduled m…

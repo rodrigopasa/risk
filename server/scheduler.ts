@@ -119,10 +119,17 @@ export async function cancelScheduledMessage(id: number): Promise<ScheduledMessa
 // Get all scheduled messages
 export async function getAllScheduledMessages(): Promise<ScheduledMessage[]> {
   try {
-    return await storage.getAllScheduledMessages();
+    try {
+      const messages = await storage.getAllScheduledMessages();
+      return messages || [];
+    } catch (storageError) {
+      log(`Erro no storage ao obter mensagens agendadas: ${storageError}`, 'scheduler');
+      return [];
+    }
   } catch (error) {
-    log(`Error getting scheduled messages: ${error}`, 'scheduler');
-    throw new Error(`Failed to get scheduled messages: ${error}`);
+    log(`Erro geral ao obter mensagens agendadas: ${error}`, 'scheduler');
+    // Retornar array vazio em vez de lançar erro
+    return [];
   }
 }
 

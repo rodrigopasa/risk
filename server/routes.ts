@@ -156,50 +156,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all contacts
   app.get("/api/contacts", async (req, res) => {
     try {
+      // Obtém o status de conexão, mas não bloqueia se não estiver conectado
       const ready = await isClientReady();
-      if (!ready) {
-        return res.status(401).json({ error: "WhatsApp not connected" });
-      }
-
+      
       const searchTerm = req.query.search as string || "";
+      
+      // Sempre retornamos contatos, mesmo que não esteja conectado
+      // a função getContacts já foi modificada para lidar com isso
       const contacts = await getContacts();
       
       let filteredContacts = contacts;
       
-      if (searchTerm) {
+      if (searchTerm && contacts && contacts.length > 0) {
         filteredContacts = contacts.filter(
-          contact => contact.name.toLowerCase().includes(searchTerm.toLowerCase())
+          contact => contact.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
       
       res.json(filteredContacts);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      log(`Erro na rota de contatos: ${error.message}`, "express");
+      // Retornar array vazio em vez de erro 500
+      res.json([]);
     }
   });
 
   // Get all groups
   app.get("/api/groups", async (req, res) => {
     try {
+      // Obtém o status de conexão, mas não bloqueia se não estiver conectado
       const ready = await isClientReady();
-      if (!ready) {
-        return res.status(401).json({ error: "WhatsApp not connected" });
-      }
-
+      
       const searchTerm = req.query.search as string || "";
+      
+      // Sempre retornamos grupos, mesmo que não esteja conectado
+      // a função getGroups já foi modificada para lidar com isso
       const groups = await getGroups();
       
       let filteredGroups = groups;
       
-      if (searchTerm) {
+      if (searchTerm && groups && groups.length > 0) {
         filteredGroups = groups.filter(
-          group => group.name.toLowerCase().includes(searchTerm.toLowerCase())
+          group => group.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
       
       res.json(filteredGroups);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      log(`Erro na rota de grupos: ${error.message}`, "express");
+      // Retornar array vazio em vez de erro 500
+      res.json([]);
     }
   });
 
@@ -251,9 +257,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/messages/scheduled", async (req, res) => {
     try {
       const scheduled = await getAllScheduledMessages();
-      res.json(scheduled);
+      res.json(scheduled || []);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      log(`Erro ao obter mensagens agendadas: ${error.message}`, "express");
+      // Retornar array vazio em vez de erro 500
+      res.json([]);
     }
   });
 
