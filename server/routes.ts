@@ -231,21 +231,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const ready = await isClientReady();
       if (!ready) {
-        return res.status(401).json({ error: "WhatsApp not connected" });
+        return res.status(401).json({ error: "WhatsApp não conectado. Por favor, escaneie o QR code primeiro." });
       }
 
+      log(`Recebido pedido para agendar mensagem: ${JSON.stringify(req.body)}`, "express");
+      
       try {
-        const scheduledMessageData = scheduledMessagesInsertSchema.parse(req.body);
+        // Vamos verificar o esquema e permitir agendamentos imediatos (sem validação de data futura)
+        // isso permite que o usuário agende mensagens para o momento atual
+        let scheduledMessageData = req.body;
+        
+        // Verificar se temos todos os campos necessários
+        if (!scheduledMessageData.contactId) {
+          return res.status(400).json({ error: "ID do contato é obrigatório" });
+        }
+        
+        if (!scheduledMessageData.content) {
+          return res.status(400).json({ error: "Conteúdo da mensagem é obrigatório" });
+        }
+        
+        if (!scheduledMessageData.scheduledTime) {
+          // Se não houver horário agendado, usar o momento atual
+          scheduledMessageData.scheduledTime = new Date();
+        }
+        
+        // Garantir que mediaUrls seja um array, mesmo que vazio
+        if (!scheduledMessageData.mediaUrls) {
+          scheduledMessageData.mediaUrls = [];
+        }
+        
+        // Validar recurring se presente
+        if (scheduledMessageData.recurring && 
+            !['none', 'daily', 'weekly', 'monthly'].includes(scheduledMessageData.recurring)) {
+          scheduledMessageData.recurring = 'none';
+        }
+        
+        // Definir status como pending
+        scheduledMessageData.status = 'pending';
+
+        log(`Dados de mensagem agendada validados: ${JSON.stringify(scheduledMessageData)}`, "express");
+        
+        // Tentar agendar a mensagem
         const result = await scheduleMessage(scheduledMessageData);
         res.status(201).json(result);
       } catch (error: any) {
+        log(`Erro ao processar agendamento: ${error}`, "express");
+        
         if (error.errors) {
-          return res.status(400).json({ error: error.errors });
+          return res.status(400).json({ 
+            error: "Erro de validação", 
+            details: error.errors 
+          });
         }
-        throw error;
+        
+        return res.status(400).json({ 
+          error: "Erro ao agendar mensagem", 
+          message: error.message 
+        });
       }
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      log(`Erro geral ao agendar mensagem: ${error.message}`, "express");
+      res.status(500).json({ error: `Erro interno: ${error.message}` });
     }
   });
 

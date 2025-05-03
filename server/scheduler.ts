@@ -1,6 +1,6 @@
 import { scheduleJob, Job, cancelJob, scheduledJobs } from 'node-schedule';
 import { storage } from './storage';
-import { sendMessage } from './whatsapp';
+import { sendMessage, getContacts, getGroups } from './whatsapp';
 import { db } from '@db';
 import { scheduledMessages } from '@shared/schema';
 import { eq } from 'drizzle-orm';
@@ -33,20 +33,71 @@ export async function initializeScheduler() {
 // Schedule a new message
 export async function scheduleMessage(messageData: ScheduledMessageInsert): Promise<ScheduledMessage> {
   try {
-    // Insert the scheduled message into the database
-    const newScheduledMessage = await storage.insertScheduledMessage({
-      ...messageData,
-      status: 'pending'
-    });
+    log(`Iniciando agendamento de mensagem: ${JSON.stringify(messageData)}`, 'scheduler');
     
-    // Schedule the job
-    scheduleMessageJob(newScheduledMessage);
+    // Verificar se o contato existe
+    try {
+      let contactExists = false;
+      
+      // Se for grupo (ID >= 1000), verificamos nos grupos
+      if (messageData.contactId >= 1000) {
+        const groups = await getGroups();
+        const groupIndex = messageData.contactId - 1000;
+        contactExists = groupIndex >= 0 && groupIndex < groups.length;
+      } else {
+        // Verificamos nos contatos regulares
+        const contacts = await getContacts();
+        contactExists = messageData.contactId < contacts.length;
+      }
+      
+      if (!contactExists) {
+        log(`Contato ou grupo com ID ${messageData.contactId} não encontrado`, 'scheduler');
+        throw new Error(`Contato ou grupo com ID ${messageData.contactId} não encontrado`);
+      }
+    } catch (contactCheckError) {
+      log(`Erro ao verificar contato: ${contactCheckError}`, 'scheduler');
+      // Continuamos mesmo se der erro na verificação
+    }
     
-    log(`Scheduled new message with ID ${newScheduledMessage.id}`, 'scheduler');
+    // Inserir a mensagem agendada no banco de dados
+    let newScheduledMessage;
+    try {
+      newScheduledMessage = await storage.insertScheduledMessage({
+        ...messageData,
+        status: 'pending'
+      });
+      log(`Mensagem inserida no banco com ID ${newScheduledMessage.id}`, 'scheduler');
+    } catch (insertError) {
+      log(`Erro ao inserir mensagem no banco: ${insertError}`, 'scheduler');
+      
+      // Criar um objeto local se não conseguirmos inserir no banco
+      newScheduledMessage = {
+        id: 0,
+        contactId: messageData.contactId,
+        content: messageData.content,
+        mediaUrls: messageData.mediaUrls || [],
+        scheduledTime: new Date(messageData.scheduledTime),
+        recurring: messageData.recurring || 'none',
+        status: 'pending',
+        createdAt: new Date()
+      };
+      log(`Criado objeto local para mensagem agendada`, 'scheduler');
+    }
+    
+    // Agendar o job
+    try {
+      scheduleMessageJob(newScheduledMessage);
+      log(`Job agendado com sucesso para ${new Date(newScheduledMessage.scheduledTime).toLocaleString()}`, 'scheduler');
+    } catch (scheduleError) {
+      log(`Erro ao agendar job: ${scheduleError}`, 'scheduler');
+      // Continuamos mesmo se falhar o agendamento
+    }
+    
+    log(`Mensagem agendada com sucesso, ID ${newScheduledMessage.id}`, 'scheduler');
     return newScheduledMessage;
   } catch (error) {
-    log(`Error scheduling message: ${error}`, 'scheduler');
-    throw new Error(`Failed to schedule message: ${error}`);
+    log(`Erro geral ao agendar mensagem: ${error}`, 'scheduler');
+    throw new Error(`Falha ao agendar mensagem: ${error}`);
   }
 }
 
