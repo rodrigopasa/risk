@@ -252,7 +252,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
             <div className="flex space-x-2">
               {mediaFiles.map((file, index) => (
                 <div key={index} className="relative">
-                  <div className="w-20 h-20 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden">
+                  <div className="w-20 h-20 rounded-md bg-pazap-dark-surface border border-pazap-dark-border flex items-center justify-center overflow-hidden">
                     {file.startsWith('data:image') ? (
                       <img 
                         src={file} 
@@ -260,7 +260,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <FileText className="h-10 w-10 text-gray-500" />
+                      <FileText className="h-10 w-10 text-pazap-dark-orange" />
                     )}
                   </div>
                   <button
@@ -278,7 +278,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
         <div className="flex items-end space-x-2">
           {/* Attachment Button */}
           <button 
-            className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
+            className="p-2 text-pazap-dark-text-secondary hover:text-pazap-dark-orange transition-colors"
             onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
             data-attachment-button="true"
           >
@@ -287,7 +287,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
 
           {/* Emoji Button */}
           <button 
-            className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
+            className="p-2 text-pazap-dark-text-secondary hover:text-pazap-dark-orange transition-colors"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             data-emoji-button="true"
           >
@@ -327,34 +327,34 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
                 ref={attachmentMenuRef}
                 className="absolute bottom-12 left-0 z-50"
               >
-                <div className="bg-white rounded-lg shadow-lg p-3">
+                <div className="bg-pazap-dark-surface rounded-lg shadow-lg p-3 border border-pazap-dark-border">
                   <div className="grid grid-cols-3 gap-2">
                     <button 
-                      className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex flex-col items-center justify-center p-3 hover:bg-pazap-dark-bg rounded-lg transition-colors"
                       onClick={() => handleOpenFileUpload("image")}
                     >
-                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mb-1">
-                        <Image className="h-5 w-5 text-green-600" />
+                      <div className="w-10 h-10 rounded-full bg-pazap-dark-surface flex items-center justify-center mb-1 border border-pazap-dark-orange">
+                        <Image className="h-5 w-5 text-pazap-dark-orange" />
                       </div>
-                      <span className="text-xs">Imagem</span>
+                      <span className="text-xs text-pazap-dark-text">Imagem</span>
                     </button>
                     <button 
-                      className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex flex-col items-center justify-center p-3 hover:bg-pazap-dark-bg rounded-lg transition-colors"
                       onClick={() => handleOpenFileUpload("document")}
                     >
-                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-1">
-                        <FileText className="h-5 w-5 text-purple-600" />
+                      <div className="w-10 h-10 rounded-full bg-pazap-dark-surface flex items-center justify-center mb-1 border border-pazap-dark-blue">
+                        <FileText className="h-5 w-5 text-pazap-dark-blue" />
                       </div>
-                      <span className="text-xs">Documento</span>
+                      <span className="text-xs text-pazap-dark-text">Documento</span>
                     </button>
                     <button 
-                      className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex flex-col items-center justify-center p-3 hover:bg-pazap-dark-bg rounded-lg transition-colors"
                       onClick={() => handleOpenFileUpload("contact")}
                     >
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
-                        <User className="h-5 w-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-full bg-pazap-dark-surface flex items-center justify-center mb-1 border border-pazap-dark-blue">
+                        <User className="h-5 w-5 text-pazap-dark-blue" />
                       </div>
-                      <span className="text-xs">Contato</span>
+                      <span className="text-xs text-pazap-dark-text">Contato</span>
                     </button>
                   </div>
                 </div>
@@ -364,7 +364,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
 
           {/* Schedule Button */}
           <button 
-            className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
+            className="p-2 text-pazap-dark-text-secondary hover:text-pazap-dark-orange transition-colors"
             onClick={() => setShowScheduleModal(true)}
           >
             <Clock className="h-6 w-6" />
@@ -372,7 +372,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
 
           {/* Send Button */}
           <button 
-            className="p-2 text-white bg-orange-500 rounded-full hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 text-white bg-pazap-dark-orange rounded-full hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSendMessage}
             disabled={(!message.trim() && mediaFiles.length === 0) || sendMessageMutation.isPending}
           >
@@ -441,7 +441,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
             <Button 
               onClick={handleScheduleMessage}
               disabled={!message.trim() || !scheduledDate || !scheduledTime || scheduleMessageMutation.isPending}
-              className="bg-orange-500 hover:bg-opacity-90 text-white"
+              className="bg-pazap-dark-orange hover:bg-opacity-90 text-white"
             >
               Agendar Mensagem
             </Button>
@@ -466,17 +466,17 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
                "Selecione um arquivo de contato"}</Label>
               <div className="flex items-center justify-center w-full">
                 <label 
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-pazap-dark-border border-dashed rounded-lg cursor-pointer bg-pazap-dark-surface hover:bg-pazap-dark-bg"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    {fileType === "image" ? <Image className="w-10 h-10 mb-3 text-gray-400" /> :
-                     fileType === "document" ? <FileText className="w-10 h-10 mb-3 text-gray-400" /> :
-                     <User className="w-10 h-10 mb-3 text-gray-400" />}
-                    <p className="mb-2 text-sm text-gray-500">
+                    {fileType === "image" ? <Image className="w-10 h-10 mb-3 text-pazap-dark-orange" /> :
+                     fileType === "document" ? <FileText className="w-10 h-10 mb-3 text-pazap-dark-blue" /> :
+                     <User className="w-10 h-10 mb-3 text-pazap-dark-blue" />}
+                    <p className="mb-2 text-sm text-pazap-dark-text">
                       <span className="font-semibold">Clique para selecionar</span> ou arraste e solte
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-pazap-dark-text-secondary">
                       {fileType === "image" ? "PNG, JPG ou GIF" : 
                        fileType === "document" ? "PDF, DOC, TXT ou XLS" : 
                        "VCF ou CSV"}
