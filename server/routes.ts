@@ -20,7 +20,15 @@ import {
 import { scheduledMessagesInsertSchema } from "@shared/schema";
 import { saveApiKey, getApiConfig } from "./services/openai";
 import { saveGoogleCredentials, getGoogleConfig, checkGoogleConnection, createCalendarEvent } from "./services/google";
-import { saveAutoResponderConfig, getAutoResponderConfig, getAutoRespondingContacts, processIncomingMessage, getDefaultClinicTemplates } from "./services/auto-responder";
+import { 
+  saveAutoResponderConfig, 
+  getAutoResponderConfig, 
+  getAutoRespondingContacts, 
+  processIncomingMessage, 
+  getDefaultClinicTemplates, 
+  getGlobalAutoRespondConfig,
+  saveGlobalAutoRespondConfig
+} from "./services/auto-responder";
 import { WebSocketServer, WebSocket } from "ws";
 import { log } from "./vite";
 
@@ -559,6 +567,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const templates = getDefaultClinicTemplates();
       res.json(templates);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Obter configuração global de auto-resposta
+  app.get("/api/auto-responders/global", async (req, res) => {
+    try {
+      const globalConfig = await getGlobalAutoRespondConfig();
+      
+      if (!globalConfig) {
+        return res.json({
+          enabled: false,
+          excludeGroups: true,
+          defaultTemplate: "Recepcionista Geral"
+        });
+      }
+      
+      // Extrair configuração do campo apiKey
+      try {
+        const configData = JSON.parse(globalConfig.apiKey || '{}');
+        res.json({
+          enabled: globalConfig.active || false,
+          excludeGroups: configData.excludeGroups !== false, // default true se não especificado
+          defaultTemplate: configData.defaultTemplate || "Recepcionista Geral"
+        });
+      } catch (parseError) {
+        // Em caso de erro ao fazer parse, retornar configuração padrão
+        res.json({
+          enabled: globalConfig.active || false,
+          excludeGroups: true,
+          defaultTemplate: "Recepcionista Geral"
+        });
+      }
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Salvar configuração global de auto-resposta
+  app.post("/api/auto-responders/global", async (req, res) => {
+    try {
+      const { enabled, excludeGroups, defaultTemplate } = req.body;
+      
+      if (typeof enabled !== 'boolean') {
+        return res.status(400).json({ error: "O parâmetro 'enabled' deve ser um booleano" });
+      }
+      
+      // Parâmetros opcionais com valores padrão
+      const excludeGroupsValue = excludeGroups === undefined ? true : !!excludeGroups;
+      const defaultTemplateValue = defaultTemplate || "Recepcionista Geral";
+      
+      // Salvar configuração
+      const success = await saveGlobalAutoRespondConfig(
+        enabled,
+        excludeGroupsValue,
+        defaultTemplateValue
+      );
+      
+      if (success) {
+        res.json({ 
+          success: true,
+          enabled,
+          excludeGroups: excludeGroupsValue,
+          defaultTemplate: defaultTemplateValue
+        });
+      } else {
+        res.status(500).json({ error: "Falha ao salvar configuração global" });
+      }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

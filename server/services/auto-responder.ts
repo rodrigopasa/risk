@@ -1,6 +1,6 @@
 import { db } from '@db';
-import { autoResponders, contacts, messages } from '@shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { autoResponders, contacts, messages, apiConfigs } from '@shared/schema';
+import { eq, and, ne } from 'drizzle-orm';
 import { log } from '../vite';
 import { generateAIResponse, shouldAutoRespond } from './openai';
 
@@ -61,14 +61,115 @@ export async function getAutoResponderConfig(contactId: number) {
   }
 }
 
+// Obter configuração global de auto resposta
+export async function getGlobalAutoRespondConfig() {
+  try {
+    const config = await db.query.apiConfigs.findFirst({
+      where: and(
+        eq(apiConfigs.service, 'auto_responder_global'),
+        eq(apiConfigs.active, true)
+      )
+    });
+    
+    return config;
+  } catch (error) {
+    log(`Error getting global auto-responder config: ${error}`, 'auto-responder');
+    return null;
+  }
+}
+
+// Salvar configuração global de auto resposta
+export async function saveGlobalAutoRespondConfig(
+  enabled: boolean, 
+  excludeGroups: boolean = true,
+  defaultTemplate: string = "Recepcionista Geral"
+): Promise<boolean> {
+  try {
+    // Verificar se já existe uma configuração global
+    const existingConfig = await db.query.apiConfigs.findFirst({
+      where: eq(apiConfigs.service, 'auto_responder_global')
+    });
+    
+    // Preparar dados como JSON string para salvar nas configs
+    const configData = JSON.stringify({
+      enabled,
+      excludeGroups,
+      defaultTemplate
+    });
+    
+    if (existingConfig) {
+      // Atualizar configuração existente
+      await db.update(apiConfigs)
+        .set({ 
+          apiKey: configData, // Usando campo apiKey para armazenar a config
+          active: enabled,
+          updatedAt: new Date()
+        })
+        .where(eq(apiConfigs.id, existingConfig.id));
+    } else {
+      // Criar nova configuração
+      await db.insert(apiConfigs).values({
+        service: 'auto_responder_global',
+        apiKey: configData,
+        active: enabled
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    log(`Error saving global auto-responder config: ${error}`, 'auto-responder');
+    return false;
+  }
+}
+
 // Função para processar mensagem recebida e gerar resposta automática se configurado
 export async function processIncomingMessage(contactId: number, messageId: number | null, messageContent: string): Promise<string | null> {
   try {
-    // Verificar se este contato deve receber resposta automática
+    // Verificar se este contato deve receber resposta automática por configuração individual
     if (!await shouldAutoRespond(contactId)) {
-      return null;
+      // Se não tiver configuração individual, verificar se está ativa a resposta global
+      const globalConfig = await getGlobalAutoRespondConfig();
+      
+      if (!globalConfig || !globalConfig.active) {
+        return null; // Não há configuração global ativa
+      }
+      
+      try {
+        // Verificar se é um grupo (IDs >= 1000 são grupos)
+        const isGroup = contactId >= 1000;
+        
+        // Obter configuração global como objeto JSON
+        const globalConfigData = JSON.parse(globalConfig.apiKey || '{}');
+        
+        // Se for um grupo e a configuração está para excluir grupos, não responde
+        if (isGroup && globalConfigData.excludeGroups) {
+          log(`Não respondendo para o grupo com ID ${contactId} (configuração global)`, 'auto-responder');
+          return null;
+        }
+        
+        // Usar template padrão para resposta global
+        const templates = getDefaultClinicTemplates();
+        const defaultTemplate = templates.find(t => t.name === globalConfigData.defaultTemplate) || templates[0];
+        
+        // Gerar resposta usando o template padrão configurado
+        const response = await generateAIResponse({
+          contactId,
+          messageId: messageId || undefined,
+          incomingMessage: messageContent,
+          systemMessage: defaultTemplate.systemMessage,
+          promptTemplate: defaultTemplate.promptTemplate,
+          model: 'gpt-4o', // usar o modelo padrão para respostas globais
+          maxHistoryMessages: 5 // usar 5 como padrão para histórico
+        });
+        
+        return response;
+      } catch (error) {
+        log(`Erro ao processar configuração global: ${error}`, 'auto-responder');
+        return null;
+      }
     }
     
+    // Se chegou aqui, tem uma configuração específica para este contato
     // Obter configuração do auto-responder
     const config = await getAutoResponderConfig(contactId);
     if (!config) {
