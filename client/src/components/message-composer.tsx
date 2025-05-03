@@ -153,12 +153,24 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
       return;
     }
     
+    // Criar a data ajustada para o fuso horário de São Paulo (GMT-3)
     const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
     
-    if (scheduledDateTime <= new Date()) {
+    // Fuso horário de São Paulo é GMT-3, aplicamos o offset manualmente
+    // Esta linha é importante para garantir que o horário seja interpretado 
+    // corretamente como horário de São Paulo
+    scheduledDateTime.setHours(scheduledDateTime.getHours() - 3);
+    
+    const now = new Date();
+    
+    // Adicionar 1 minuto para permitir agendamento imediato mas evitar problemas
+    // com envio retroativo (dá um pequeno buffer para processamento)
+    const minimumScheduleTime = new Date(now.getTime() + 60000);
+    
+    if (scheduledDateTime < minimumScheduleTime) {
       toast({
         title: "Data inválida",
-        description: "A data de agendamento deve ser no futuro",
+        description: "A data de agendamento deve ser pelo menos 1 minuto no futuro",
         variant: "destructive",
       });
       return;
