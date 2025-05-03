@@ -439,5 +439,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =========== NOVAS ROTAS PARA IA E INTEGRAÇÕES ===========
+
+  // API OpenAI - Obter configuração
+  app.get("/api/config/openai", async (req, res) => {
+    try {
+      const config = await getApiConfig('openai');
+      // Retornar apenas as informações necessárias para o frontend
+      res.json({
+        hasApiKey: !!config?.apiKey,
+        apiKeyMasked: config?.apiKey ? `${config.apiKey.substring(0, 3)}...${config.apiKey.substring(config.apiKey.length - 4)}` : null
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // API OpenAI - Salvar configuração
+  app.post("/api/config/openai", async (req, res) => {
+    try {
+      const { apiKey } = req.body;
+      if (!apiKey) {
+        return res.status(400).json({ error: "API key is required" });
+      }
+
+      const success = await saveApiKey('openai', apiKey);
+      if (!success) {
+        return res.status(500).json({ error: "Failed to save API key" });
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // API Google - Obter configuração
+  app.get("/api/config/google", async (req, res) => {
+    try {
+      const config = await getGoogleConfig();
+      // Retornar apenas as informações necessárias para o frontend
+      res.json({
+        hasCredentials: !!(config?.clientId && config?.clientSecret),
+        clientIdMasked: config?.clientId ? `${config.clientId.substring(0, 5)}...${config.clientId.substring(config.clientId.length - 5)}` : null,
+        hasRefreshToken: !!config?.refreshToken
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // API Google - Salvar configuração
+  app.post("/api/config/google", async (req, res) => {
+    try {
+      const { clientId, clientSecret, refreshToken } = req.body;
+      if (!clientId || !clientSecret) {
+        return res.status(400).json({ error: "Client ID and Client Secret are required" });
+      }
+
+      const success = await saveGoogleCredentials(clientId, clientSecret, refreshToken);
+      if (!success) {
+        return res.status(500).json({ error: "Failed to save Google credentials" });
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // API Google - Testar conexão
+  app.get("/api/config/google/test", async (req, res) => {
+    try {
+      const result = await checkGoogleConnection();
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Auto Responder - Obter configuração para um contato
+  app.get("/api/auto-responders/:contactId", async (req, res) => {
+    try {
+      const contactId = parseInt(req.params.contactId);
+      if (isNaN(contactId)) {
+        return res.status(400).json({ error: "Invalid contact ID" });
+      }
+
+      const config = await getAutoResponderConfig(contactId);
+      res.json(config || {});
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Auto Responder - Salvar configuração para um contato
+  app.post("/api/auto-responders/:contactId", async (req, res) => {
+    try {
+      const contactId = parseInt(req.params.contactId);
+      if (isNaN(contactId)) {
+        return res.status(400).json({ error: "Invalid contact ID" });
+      }
+
+      const config = { ...req.body, contactId };
+      const success = await saveAutoResponderConfig(config);
+      
+      if (!success) {
+        return res.status(500).json({ error: "Failed to save auto responder config" });
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Auto Responder - Obter templates padrão para clínica
+  app.get("/api/auto-responders/templates/clinic", async (req, res) => {
+    try {
+      const templates = getDefaultClinicTemplates();
+      res.json(templates);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Auto Responder - Testar resposta de IA
+  app.post("/api/ai/test-response", async (req, res) => {
+    try {
+      const { contactId, messageContent } = req.body;
+      if (!contactId || !messageContent) {
+        return res.status(400).json({ error: "Contact ID and message content are required" });
+      }
+
+      const response = await processIncomingMessage(contactId, null, messageContent);
+      res.json({ response });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Google Calendar - Criar evento
+  app.post("/api/calendar/events", async (req, res) => {
+    try {
+      const { summary, description, startTime, endTime, attendees } = req.body;
+      
+      if (!summary || !startTime || !endTime) {
+        return res.status(400).json({ error: "Summary, start time, and end time are required" });
+      }
+      
+      const event = await createCalendarEvent(
+        summary,
+        description || "",
+        new Date(startTime),
+        new Date(endTime),
+        attendees || []
+      );
+      
+      res.json(event);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }
