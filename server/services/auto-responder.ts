@@ -62,7 +62,7 @@ export async function getAutoResponderConfig(contactId: number) {
 }
 
 // Função para processar mensagem recebida e gerar resposta automática se configurado
-export async function processIncomingMessage(contactId: number, messageId: number, messageContent: string): Promise<string | null> {
+export async function processIncomingMessage(contactId: number, messageId: number | null, messageContent: string): Promise<string | null> {
   try {
     // Verificar se este contato deve receber resposta automática
     if (!await shouldAutoRespond(contactId)) {
@@ -78,12 +78,12 @@ export async function processIncomingMessage(contactId: number, messageId: numbe
     // Gerar resposta com base na configuração
     const response = await generateAIResponse({
       contactId,
-      messageId,
+      messageId: messageId || undefined,
       incomingMessage: messageContent,
-      systemMessage: config.systemMessage,
-      promptTemplate: config.promptTemplate,
-      model: config.aiModel,
-      maxHistoryMessages: config.maxHistoryMessages
+      systemMessage: config.systemMessage || undefined,
+      promptTemplate: config.promptTemplate || undefined,
+      model: config.aiModel || undefined,
+      maxHistoryMessages: config.maxHistoryMessages || undefined
     });
     
     return response;

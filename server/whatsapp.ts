@@ -1,9 +1,10 @@
 import whatsappWeb from "whatsapp-web.js";
 const { Client, LocalAuth } = whatsappWeb;
 import { db } from "@db";
-import { contacts, messages } from "@shared/schema";
+import { contacts, messages, autoResponders } from "@shared/schema";
 import { eq, desc, and, ne } from "drizzle-orm";
 import { log } from "./vite"; 
+import { processIncomingMessage } from "./services/auto-responder";
 
 let client: typeof Client.prototype | null = null;
 let qrCodeData: string | null = null;
@@ -145,14 +146,48 @@ export async function initializeWhatsApp(
           where: eq(contacts.phoneNumber, message.from)
         });
         
-        if (contact) {
-          await db.insert(messages).values({
-            contactId: contact.id,
-            content: message.body,
-            fromMe: false,
-            status: "received",
-            mediaUrls: []
-          });
+        if (!contact) {
+          log(`Contact not found for number ${message.from}`, "whatsapp");
+          return;
+        }
+        
+        // Inserir a mensagem no banco de dados
+        const [insertedMessage] = await db.insert(messages).values({
+          contactId: contact.id,
+          content: message.body,
+          fromMe: false,
+          status: "received",
+          mediaUrls: []
+        }).returning();
+        
+        // Verificar se o contato tem configuração para respostas automáticas
+        log(`Verificando se o contato ${contact.id} tem respostas automáticas configuradas`, "whatsapp");
+        
+        // Verificar se existe uma configuração de resposta automática para este contato
+        const autoResponder = await db.query.autoResponders.findFirst({
+          where: eq(autoResponders.contactId, contact.id),
+        });
+        
+        if (autoResponder && autoResponder.enabled) {
+          log(`Contato ${contact.name} tem resposta automática ativada`, "whatsapp");
+          
+          // Gerar resposta automática
+          const autoResponse = await processIncomingMessage(
+            contact.id, 
+            insertedMessage.id,
+            message.body
+          );
+          
+          if (autoResponse) {
+            log(`Resposta automática gerada: ${autoResponse.substring(0, 50)}...`, "whatsapp");
+            
+            // Enviar resposta automática
+            await sendMessage(contact.id, autoResponse);
+          } else {
+            log(`Não foi possível gerar resposta automática para o contato ${contact.id}`, "whatsapp");
+          }
+        } else {
+          log(`Contato ${contact.name} não tem resposta automática ativada`, "whatsapp");
         }
       } catch (error) {
         log(`Error processing incoming message: ${error}`, "whatsapp");
