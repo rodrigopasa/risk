@@ -343,10 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/messages/scheduled", async (req, res) => {
     try {
       log("Carregando mensagens agendadas...", "express");
-      const scheduled = await getAllScheduledMessages();
-      
-      // Log das mensagens carregadas
-      log(`Mensagens agendadas carregadas: ${JSON.stringify(scheduled)}`, "express");
+      const scheduled = await storage.getAllScheduledMessages();
       
       // Se não houver mensagens agendadas, retornar array vazio
       if (!scheduled || scheduled.length === 0) {
@@ -354,34 +351,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
       
-      // Adicionar os contatos para as mensagens agendadas
-      const scheduledWithContacts = await Promise.all(scheduled.map(async message => {
-        // Tenta obter o contato relacionado pelo contactId
-        let contact = await storage.getContactById(message.contactId);
-        
-        // Log para debug
-        log(`Contato para mensagem ${message.id}: ${JSON.stringify(contact)}`, "express");
-        
-        // Se o contato não for encontrado, definimos um contato padrão
-        if (!contact) {
-          contact = { 
-            id: message.contactId, 
-            name: 'Contato não encontrado', 
-            phoneNumber: 'desconhecido',
-            isGroup: false,
-            profilePicUrl: null,
-            participants: null,
-            createdAt: new Date()
-          };
-          log(`Usando contato padrão para mensagem ${message.id}`, "express");
+      log(`Encontradas ${scheduled.length} mensagens agendadas`, "express");
+      
+      // Adicionar os contatos para as mensagens agendadas de forma mais robusta
+      const scheduledWithContacts = [];
+      
+      for (const message of scheduled) {
+        try {
+          // Tenta obter o contato relacionado pelo contactId
+          let contact = null;
+          try {
+            contact = await storage.getContactById(message.contactId);
+            log(`Obtido contato para mensagem ${message.id}: ${contact ? 'Encontrado' : 'Não encontrado'}`, "express");
+          } catch (contactError) {
+            log(`Erro ao buscar contato para mensagem ${message.id}: ${contactError}`, "express");
+          }
+          
+          // Se o contato não for encontrado, definimos um contato padrão
+          if (!contact) {
+            contact = { 
+              id: message.contactId, 
+              name: `Contato #${message.contactId}`, 
+              phoneNumber: 'Não disponível',
+              isGroup: false,
+              profilePicUrl: null,
+              participants: null,
+              createdAt: new Date()
+            };
+            log(`Usando contato padrão para mensagem ${message.id}`, "express");
+          }
+          
+          // Adiciona mensagem com contato ao array de resultados
+          scheduledWithContacts.push({
+            ...message,
+            contact: contact
+          });
+        } catch (err) {
+          log(`Erro ao processar mensagem ${message.id}: ${err}`, "express");
+          // Mesmo com erro, adicionamos a mensagem com um contato padrão
+          scheduledWithContacts.push({
+            ...message,
+            contact: { 
+              id: message.contactId, 
+              name: `Contato ID ${message.contactId}`, 
+              phoneNumber: 'Erro ao carregar',
+              isGroup: false,
+              profilePicUrl: null,
+              participants: null,
+              createdAt: new Date()
+            }
+          });
         }
-        
-        // Retorna a mensagem com o contato
-        return {
-          ...message,
-          contact: contact
-        };
-      }));
+      }
       
       log(`Enviando ${scheduledWithContacts.length} mensagens agendadas`, "express");
       res.json(scheduledWithContacts);

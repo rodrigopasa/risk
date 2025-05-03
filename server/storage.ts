@@ -81,25 +81,16 @@ export const storage = {
   
   async getAllScheduledMessages() {
     try {
-      log("Buscando todas as mensagens agendadas com contatos...", "storage");
+      log("Buscando todas as mensagens agendadas diretamente do banco...", "storage");
       
-      const messages = await db.query.scheduledMessages.findMany({
-        orderBy: asc(scheduledMessages.scheduledTime),
-        with: {
-          contact: true
-        }
-      });
+      // Método alternativo: buscar mensagens diretamente sem tentar carregar relações
+      const messages = await db.select().from(scheduledMessages).orderBy(asc(scheduledMessages.scheduledTime));
       
-      log(`Encontradas ${messages.length} mensagens agendadas`, "storage");
-      
-      // Log para debug
-      for (const msg of messages) {
-        log(`Mensagem ID: ${msg.id}, ContactID: ${msg.contactId}, Contato: ${msg.contact ? 'encontrado' : 'não encontrado'}`, "storage");
-      }
+      log(`Encontradas ${messages.length} mensagens agendadas (método direto)`, "storage");
       
       return messages;
     } catch (error) {
-      log(`Erro ao buscar mensagens agendadas: ${error}`, "storage");
+      log(`Erro no storage ao obter mensagens agendadas: ${error}`, "storage");
       return [];
     }
   },
