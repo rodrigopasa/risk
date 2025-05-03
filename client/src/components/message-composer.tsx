@@ -222,34 +222,38 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
         
         const img = new Image();
         img.onload = () => {
-          // Definir dimensão máxima (1200px para manter qualidade razoável)
-          const MAX_SIZE = 1200;
-          let width = img.width;
-          let height = img.height;
-          
-          // Calcular nova dimensão mantendo proporção
-          if (width > height && width > MAX_SIZE) {
-            height = (height * MAX_SIZE) / width;
-            width = MAX_SIZE;
-          } else if (height > MAX_SIZE) {
-            width = (width * MAX_SIZE) / height;
-            height = MAX_SIZE;
+          try {
+            // Definir dimensão máxima (1200px para manter qualidade razoável)
+            const MAX_SIZE = 1200;
+            let width = img.width;
+            let height = img.height;
+            
+            // Calcular nova dimensão mantendo proporção
+            if (width > height && width > MAX_SIZE) {
+              height = (height * MAX_SIZE) / width;
+              width = MAX_SIZE;
+            } else if (height > MAX_SIZE) {
+              width = (width * MAX_SIZE) / height;
+              height = MAX_SIZE;
+            }
+            
+            // Criar canvas para redimensionar
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Desenhar imagem redimensionada
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return reject(new Error("Contexto 2D não disponível"));
+            
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Converter para JPEG com 75% de qualidade para reduzir tamanho
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            resolve(dataUrl);
+          } catch (err) {
+            reject(new Error(`Erro ao processar imagem: ${err}`));
           }
-          
-          // Criar canvas para redimensionar
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          
-          // Desenhar imagem redimensionada
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return reject(new Error("Contexto 2D não disponível"));
-          
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          // Converter para JPEG com 75% de qualidade para reduzir tamanho
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
-          resolve(dataUrl);
         };
         
         img.onerror = () => reject(new Error("Falha ao carregar imagem"));

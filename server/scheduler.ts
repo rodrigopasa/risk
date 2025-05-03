@@ -277,20 +277,41 @@ function scheduleMessageJob(message: ScheduledMessage) {
 async function scheduleRecurringMessage(message: ScheduledMessage) {
   try {
     // Calculate the next scheduled time based on recurrence
+    // Usamos a data e hora atual como base para evitar agendamentos acumulados no passado
+    const now = new Date();
     let nextScheduledTime = new Date(message.scheduledTime);
     
-    switch (message.recurring) {
-      case 'daily':
+    // Verificar se a recorrência está sendo configurada a partir de uma data no passado
+    // Se for o caso, precisamos calcular quanta recorrência já passou e ajustar
+    if (nextScheduledTime < now) {
+      // Para agendamento diário, semanal ou mensal, usamos a hora da programação original
+      // mas com a data atual
+      const hour = nextScheduledTime.getHours();
+      const minute = nextScheduledTime.getMinutes();
+      
+      // Usar data atual com a hora programada
+      nextScheduledTime = new Date(now);
+      nextScheduledTime.setHours(hour, minute, 0, 0);
+      
+      // Se ainda estiver no passado, avançar um dia
+      if (nextScheduledTime < now) {
         nextScheduledTime.setDate(nextScheduledTime.getDate() + 1);
-        break;
-      case 'weekly':
-        nextScheduledTime.setDate(nextScheduledTime.getDate() + 7);
-        break;
-      case 'monthly':
-        nextScheduledTime.setMonth(nextScheduledTime.getMonth() + 1);
-        break;
-      default:
-        return; // No recurrence
+      }
+    } else {
+      // Se a data original estiver no futuro, usamos ela como base
+      switch (message.recurring) {
+        case 'daily':
+          nextScheduledTime.setDate(nextScheduledTime.getDate() + 1);
+          break;
+        case 'weekly':
+          nextScheduledTime.setDate(nextScheduledTime.getDate() + 7);
+          break;
+        case 'monthly':
+          nextScheduledTime.setMonth(nextScheduledTime.getMonth() + 1);
+          break;
+        default:
+          return; // No recurrence
+      }
     }
     
     // Create a new scheduled message for the next occurrence
