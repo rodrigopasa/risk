@@ -88,9 +88,9 @@ export default function Home() {
   const { logout } = useAuth();
 
   return (
-    <div className="flex flex-col h-screen bg-pazap-bg animate-fade-in">
+    <div className="flex flex-col h-screen bg-pazap-dark-bg text-pazap-dark-text animate-fade-in">
       {/* Header */}
-      <header className="bg-gradient-to-r from-pazap-orange to-pazap-blue text-white p-4 shadow-lg">
+      <header className="bg-pazap-dark-surface border-b border-pazap-dark-border p-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold gradient-text">PaZap</h1>
           <div className="flex items-center space-x-4">
@@ -100,7 +100,7 @@ export default function Home() {
             </div>
             <button 
               onClick={logout} 
-              className="bg-white/20 hover:bg-white/30 transition-colors rounded-md px-3 py-1 text-sm"
+              className="bg-pazap-dark-border hover:bg-pazap-dark-orange transition-colors rounded-md px-3 py-1 text-sm"
             >
               Sair
             </button>
@@ -111,7 +111,7 @@ export default function Home() {
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="bg-white/90 w-80 flex flex-col border-r border-orange-100 h-full shadow-md">
+        <aside className="bg-pazap-dark-surface w-80 flex flex-col border-r border-pazap-dark-border h-full shadow-md">
           {/* QR Code Section */}
           {!connected && (
             <QRCode onConnect={handleConnectWhatsApp} />
@@ -121,10 +121,10 @@ export default function Home() {
           <ContactList onSelectContact={handleContactSelect} />
 
           {/* Scheduled Messages Button */}
-          <div className="p-3 border-t border-orange-100">
+          <div className="p-3 border-t border-pazap-dark-border">
             <button 
               onClick={toggleScheduledMessages}
-              className="w-full flex items-center justify-center bg-pazap-blue text-white px-4 py-2 rounded-md hover:bg-pazap-blue-light transition-colors shadow-md"
+              className="w-full flex items-center justify-center bg-pazap-dark-blue text-white px-4 py-2 rounded-md hover:bg-opacity-90 transition-colors shadow-md"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -145,28 +145,28 @@ export default function Home() {
               <MessageComposer contact={selectedContact} />
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-white/90 text-center px-4 animate-fade-in">
+            <div className="flex-1 flex flex-col items-center justify-center bg-pazap-dark-bg text-center px-4 animate-fade-in">
               <div className="mb-8 animate-pulse">
-                <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-pazap-orange to-pazap-blue flex items-center justify-center text-white text-5xl font-bold">
+                <div className="h-24 w-24 mx-auto rounded-full pazap-gradient flex items-center justify-center text-white text-5xl font-bold">
                   PZ
                 </div>
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-pazap-orange">Sistema de Mensagens PaZap</h2>
-              <p className="text-gray-600 max-w-lg">
+              <h2 className="text-2xl font-bold mb-2 gradient-text">Sistema de Mensagens PaZap</h2>
+              <p className="text-pazap-dark-text-secondary max-w-lg">
                 Conecte-se usando o QR code no painel lateral. Selecione um contato ou grupo para enviar mensagens ou agendar envios para um momento específico.
               </p>
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
-                <div className="bg-pazap-orange/10 p-4 rounded-lg border border-pazap-orange/20 animate-slide-in" style={{animationDelay: '0.1s'}}>
-                  <h3 className="text-pazap-orange font-semibold mb-2">Envios Imediatos</h3>
-                  <p className="text-sm">Envie mensagens de texto, imagens e links para seus contatos em tempo real.</p>
+                <div className="bg-pazap-dark-surface p-4 rounded-lg border border-pazap-dark-orange/50 animate-slide-in" style={{animationDelay: '0.1s'}}>
+                  <h3 className="text-pazap-dark-orange font-semibold mb-2">Envios Imediatos</h3>
+                  <p className="text-sm text-pazap-dark-text-secondary">Envie mensagens de texto, imagens e links para seus contatos em tempo real.</p>
                 </div>
-                <div className="bg-pazap-blue/10 p-4 rounded-lg border border-pazap-blue/20 animate-slide-in" style={{animationDelay: '0.2s'}}>
-                  <h3 className="text-pazap-blue font-semibold mb-2">Agendamentos</h3>
-                  <p className="text-sm">Programe o envio de mensagens para qualquer horário, até mesmo para daqui alguns minutos.</p>
+                <div className="bg-pazap-dark-surface p-4 rounded-lg border border-pazap-dark-blue/50 animate-slide-in" style={{animationDelay: '0.2s'}}>
+                  <h3 className="text-pazap-dark-blue font-semibold mb-2">Agendamentos</h3>
+                  <p className="text-sm text-pazap-dark-text-secondary">Programe o envio de mensagens para qualquer horário, até mesmo para daqui alguns minutos.</p>
                 </div>
-                <div className="bg-gradient-to-br from-pazap-orange/10 to-pazap-blue/10 p-4 rounded-lg border border-pazap-orange/20 animate-slide-in" style={{animationDelay: '0.3s'}}>
+                <div className="bg-pazap-dark-surface p-4 rounded-lg border border-pazap-dark-border animate-slide-in" style={{animationDelay: '0.3s'}}>
                   <h3 className="gradient-text font-semibold mb-2">Integração</h3>
-                  <p className="text-sm">Acesse todos os seus contatos e grupos diretamente do WhatsApp.</p>
+                  <p className="text-sm text-pazap-dark-text-secondary">Acesse todos os seus contatos e grupos diretamente do WhatsApp.</p>
                 </div>
               </div>
             </div>

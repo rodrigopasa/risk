@@ -133,60 +133,64 @@
 }
 
 /* Dark theme utility classes */
-.dark-mode {
+.bg-pazap-dark-bg {
   background-color: var(--pazap-dark-bg);
-  color: var(--pazap-dark-text);
 }
 
-.dark-mode .bg-pazap-surface {
+.bg-pazap-dark-surface {
   background-color: var(--pazap-dark-surface);
 }
 
-.dark-mode .border-pazap {
+.border-pazap-dark-border {
   border-color: var(--pazap-dark-border);
 }
 
-.dark-mode .text-pazap-orange {
+.text-pazap-dark-text {
+  color: var(--pazap-dark-text);
+}
+
+.text-pazap-dark-text-secondary {
+  color: var(--pazap-dark-text-secondary);
+}
+
+.text-pazap-dark-orange {
   color: var(--pazap-dark-orange);
 }
 
-.dark-mode .text-pazap-blue {
+.text-pazap-dark-blue {
   color: var(--pazap-dark-blue);
 }
 
-.dark-mode .bg-pazap-orange {
+.bg-pazap-dark-orange {
   background-color: var(--pazap-dark-orange);
 }
 
-.dark-mode .bg-pazap-blue {
+.bg-pazap-dark-blue {
   background-color: var(--pazap-dark-blue);
-}
-
-.dark-mode .text-secondary {
-  color: var(--pazap-dark-text-secondary);
 }
 
 .pazap-gradient {
   background: var(--pazap-dark-gradient);
 }
 
-.dark-mode .quill {
+/* Quill dark theme */
+.quill-dark {
   background-color: var(--pazap-dark-surface);
   border-color: var(--pazap-dark-border);
 }
 
-.dark-mode .ql-toolbar {
+.quill-dark .ql-toolbar {
   background-color: var(--pazap-dark-surface);
   border-color: var(--pazap-dark-border) !important;
 }
 
-.dark-mode .ql-container {
+.quill-dark .ql-container {
   background-color: var(--pazap-dark-surface);
   border-color: var(--pazap-dark-border) !important;
   color: var(--pazap-dark-text);
 }
 
-.dark-mode .ql-editor.ql-blank::before {
+.quill-dark .ql-editor.ql-blank::before {
   color: var(--pazap-dark-text-secondary);
 }
 

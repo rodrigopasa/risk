@@ -135,22 +135,22 @@ export default function QRCode({ onConnect }: QRCodeProps) {
   }, [isError, toast]);
 
   return (
-    <div className="p-4 border-b border-orange-100 animate-fade-in">
-      <Card className="bg-gradient-to-br from-white to-pazap-bg shadow-md overflow-hidden">
+    <div className="p-4 border-b border-pazap-dark-border animate-fade-in">
+      <Card className="bg-pazap-dark-surface shadow-md overflow-hidden border border-pazap-dark-border">
         <CardContent className="p-6 text-center">
           <h2 className="font-semibold text-xl mb-2 gradient-text">Conectar ao PaZap</h2>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-pazap-dark-text-secondary mb-4">
             Escaneie o QR code com seu WhatsApp para conectar
           </p>
           
-          <div className="w-64 h-64 mx-auto bg-white flex items-center justify-center border border-pazap-orange/20 rounded-md p-2 shadow-inner relative overflow-hidden">
+          <div className="w-64 h-64 mx-auto bg-pazap-dark-bg flex items-center justify-center border border-pazap-dark-border rounded-md p-2 shadow-inner relative overflow-hidden">
             {/* Efeito decorativo */}
-            <div className="absolute inset-0 bg-gradient-to-br from-pazap-orange/5 to-pazap-blue/5"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-pazap-dark-orange/10 to-pazap-dark-blue/10"></div>
             
             {generatingQR ? (
               isLoading && !qrCode ? (
                 <div className="animate-pulse">
-                  <Skeleton className="w-full h-full" />
+                  <Skeleton className="w-full h-full bg-pazap-dark-surface" />
                 </div>
               ) : qrCode ? (
                 <div className="w-full h-full flex items-center justify-center animate-fade-in">
@@ -161,11 +161,11 @@ export default function QRCode({ onConnect }: QRCodeProps) {
                   ></iframe>
                 </div>
               ) : (
-                <p className="text-gray-400">QR Code não disponível</p>
+                <p className="text-pazap-dark-text-secondary">QR Code não disponível</p>
               )
             ) : (
-              <div className="text-gray-400 flex flex-col items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-2 text-pazap-orange/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="text-pazap-dark-text-secondary flex flex-col items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-2 text-pazap-dark-orange/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                 </svg>
                 <p>QR Code aparecerá aqui</p>
@@ -176,21 +176,21 @@ export default function QRCode({ onConnect }: QRCodeProps) {
           <Button 
             onClick={handleInitiateConnection}
             disabled={generatingQR && !isError}
-            className="mt-6 bg-gradient-to-r from-pazap-orange to-pazap-blue hover:opacity-90 text-white shadow-md transition-all hover:shadow-lg"
+            className="mt-6 bg-pazap-dark-orange hover:opacity-90 text-white shadow-md transition-all hover:shadow-lg"
           >
             {generatingQR ? "Gerando QR Code..." : "Iniciar Conexão"}
           </Button>
           
           {generatingQR && !qrCode && (
-            <div className="mt-4 p-2 bg-pazap-orange/10 rounded-md border border-pazap-orange/20 animate-fade-in">
-              <p className="text-sm text-gray-600 mb-1">
+            <div className="mt-4 p-2 bg-pazap-dark-bg rounded-md border border-pazap-dark-orange/30 animate-fade-in">
+              <p className="text-sm text-pazap-dark-text-secondary mb-1">
                 Se o QR code não aparecer, você pode visualizá-lo clicando abaixo:
               </p>
               <a 
                 href="/api/whatsapp/qrcode-html" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-sm text-pazap-blue hover:underline inline-flex items-center"
+                className="text-sm text-pazap-dark-blue hover:underline inline-flex items-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />

@@ -34,9 +34,9 @@ export default function ChatArea({ contact, messages }: ChatAreaProps) {
   return (
     <>
       {/* Conversation Header */}
-      <div className="bg-pazap-surface border-b border-pazap p-3 flex items-center">
+      <div className="bg-pazap-dark-surface border-b border-pazap-dark-border p-3 flex items-center">
         <div className="flex items-center flex-1">
-          <div className={`h-10 w-10 rounded-full ${contact.isGroup ? 'bg-pazap-blue' : 'bg-pazap-orange'} text-white flex items-center justify-center mr-3 animate-pulse`}>
+          <div className={`h-10 w-10 rounded-full ${contact.isGroup ? 'bg-pazap-dark-blue' : 'bg-pazap-dark-orange'} text-white flex items-center justify-center mr-3 animate-pulse`}>
             <span className="font-semibold">
               {contact.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
             </span>
@@ -51,7 +51,7 @@ export default function ChatArea({ contact, messages }: ChatAreaProps) {
           </div>
         </div>
         <div>
-          <button className="p-2 rounded-full text-pazap-dark-text hover:bg-pazap-dark-surface transition-colors">
+          <button className="p-2 rounded-full text-pazap-dark-text-secondary hover:bg-pazap-dark-bg transition-colors">
             <Maximize2 className="h-5 w-5" />
           </button>
         </div>
@@ -70,9 +70,9 @@ export default function ChatArea({ contact, messages }: ChatAreaProps) {
               className={`flex ${message.fromMe ? 'justify-end' : 'justify-start'} mb-3 animate-fade-in`}
             >
               <div 
-                className={`rounded-lg py-2 px-3 max-w-md ${
+                className={`rounded-lg py-2 px-3 max-w-md shadow-sm ${
                   message.fromMe 
-                    ? 'bg-pazap-orange text-white' 
+                    ? 'bg-pazap-dark-orange text-white' 
                     : 'bg-pazap-dark-surface text-pazap-dark-text'
                 }`}
               >
