@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, BrainCircuit } from "lucide-react";
 import { Contact, Message } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AIConfigDialog } from "./ai-config-dialog";
 
 interface ChatAreaProps {
   contact: Contact;
@@ -16,6 +18,12 @@ export default function ChatArea({ contact, messages }: ChatAreaProps) {
   // Fetch messages for this contact
   const { data: fetchedMessages } = useQuery({
     queryKey: [`/api/contacts/${contact.id}/messages`],
+    enabled: !!contact?.id,
+  });
+  
+  // Fetch auto-responder config
+  const { data: autoResponderConfig } = useQuery({
+    queryKey: [`/api/auto-responders/${contact.id}`],
     enabled: !!contact?.id,
   });
 
@@ -51,7 +59,22 @@ export default function ChatArea({ contact, messages }: ChatAreaProps) {
             </p>
           </div>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
+          {autoResponderConfig?.enabled && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="p-1.5 rounded-full bg-pazap-dark-blue/20 text-pazap-dark-blue">
+                    <BrainCircuit className="h-4 w-4" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Respostas automáticas ativadas</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          <AIConfigDialog contact={contact} />
           <button className="p-2 rounded-full text-pazap-dark-text-secondary hover:bg-pazap-dark-bg transition-colors">
             <Maximize2 className="h-5 w-5" />
           </button>

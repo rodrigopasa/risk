@@ -5,6 +5,7 @@ import QRCode from "@/components/qr-code";
 import ChatArea from "@/components/chat-area";
 import MessageComposer from "@/components/message-composer";
 import ScheduledMessages from "@/components/scheduled-messages";
+import { AIConfigDialog } from "@/components/ai-config-dialog";
 import { useWhatsAppContext } from "@/hooks/use-whatsapp";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -98,6 +99,7 @@ export default function Home() {
               <span className={`h-3 w-3 rounded-full mr-2 ${connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
               <span>{connected ? 'Conectado' : 'Desconectado'}</span>
             </div>
+            <AIConfigDialog contact={selectedContact || undefined} />
             <button 
               onClick={logout} 
               className="bg-pazap-dark-border hover:bg-pazap-dark-orange transition-colors rounded-md px-3 py-1 text-sm"
