@@ -354,27 +354,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
       
-      // Como os dados já vêm com as relações de contato pelo Drizzle ORM,
-      // não precisamos fazer o mapeamento manual. Apenas garantimos que todos os campos necessários
-      // estejam preenchidos ou tenham valores padrão.
-      const scheduledWithContacts = scheduled.map(message => {
-        // Se por algum motivo o contato não for encontrado, definimos um contato padrão
-        if (!message.contact) {
-          return {
-            ...message,
-            contact: { 
-              id: message.contactId, 
-              name: 'Contato não encontrado', 
-              phoneNumber: 'desconhecido',
-              isGroup: false 
-            }
+      // Adicionar os contatos para as mensagens agendadas
+      const scheduledWithContacts = await Promise.all(scheduled.map(async message => {
+        // Tenta obter o contato relacionado pelo contactId
+        let contact = await storage.getContactById(message.contactId);
+        
+        // Log para debug
+        log(`Contato para mensagem ${message.id}: ${JSON.stringify(contact)}`, "express");
+        
+        // Se o contato não for encontrado, definimos um contato padrão
+        if (!contact) {
+          contact = { 
+            id: message.contactId, 
+            name: 'Contato não encontrado', 
+            phoneNumber: 'desconhecido',
+            isGroup: false,
+            participants: [],
+            createdAt: new Date()
           };
+          log(`Usando contato padrão para mensagem ${message.id}`, "express");
         }
         
-        // Caso contrário, usamos o contato que já veio do banco de dados
-        return message;
-      });
+        // Retorna a mensagem com o contato
+        return {
+          ...message,
+          contact: contact
+        };
+      }));
       
+      log(`Enviando ${scheduledWithContacts.length} mensagens agendadas`, "express");
       res.json(scheduledWithContacts);
       
     } catch (error: any) {
