@@ -378,77 +378,135 @@ async function syncContacts() {
 // Get all contacts
 export async function getContacts() {
   try {
-    // Mesmo que o cliente não esteja totalmente pronto, podemos tentar retornar contatos do banco
-    // ao invés de lançar um erro imediatamente
-    try {
-      // Verificação mais suave - se o cliente estiver pronto, perfeito
-      // se não, usamos o banco de dados de qualquer forma
-      if (client && client.info) {
-        log("Cliente WhatsApp pronto, obtendo contatos", "whatsapp");
-      } else {
-        log("Cliente WhatsApp não está pronto, usando apenas o banco de dados", "whatsapp");
+    if (client && client.info) {
+      log("Cliente WhatsApp pronto, obtendo contatos diretamente da API", "whatsapp");
+      
+      try {
+        // Obter contatos diretamente do WhatsApp Web
+        const whatsappContacts = await client.getContacts();
+        
+        // Filtrar contatos válidos
+        const validContacts = whatsappContacts
+          .filter(contact => contact.id?.user && contact.id.user !== "status")
+          .filter(contact => !contact.isGroup); // Garantir que não pegamos grupos
+        
+        log(`Obtidos ${validContacts.length} contatos válidos diretamente do WhatsApp`, "whatsapp");
+        
+        // Transformar para o formato esperado pela aplicação
+        const formattedContacts = await Promise.all(validContacts.map(async (contact, index) => {
+          let profilePicUrl = null;
+          try {
+            if (typeof contact.getProfilePicUrl === 'function') {
+              profilePicUrl = await contact.getProfilePicUrl() || null;
+            }
+          } catch (picError) {
+            // Ignorar erros de foto de perfil
+          }
+          
+          return {
+            id: index + 1, // ID temporário para a UI
+            name: contact.name || contact.pushname || contact.id._serialized,
+            phoneNumber: contact.id._serialized,
+            profilePicUrl: profilePicUrl,
+            isGroup: false,
+            participants: [],
+            createdAt: new Date()
+          };
+        }));
+        
+        // Adicionar um contato padrão ao início para garantir que temos pelo menos um
+        formattedContacts.unshift({
+          id: 0,
+          name: "Todos os contatos",
+          phoneNumber: "default",
+          profilePicUrl: null,
+          isGroup: false,
+          participants: [],
+          createdAt: new Date()
+        });
+        
+        return formattedContacts;
+      } catch (apiError) {
+        log(`Erro ao obter contatos da API do WhatsApp: ${apiError}`, "whatsapp");
       }
-      
-      // Sempre retornamos o que temos no banco
-      const result = await db.query.contacts.findMany({
-        where: eq(contacts.isGroup, false),
-        orderBy: contacts.name
-      });
-      
-      // Se não temos contatos ainda, pelo menos retornamos um array vazio
-      // em vez de um erro 500
-      return result || [];
-    } catch (dbError) {
-      // Em caso de erro no banco, criamos um contato padrão para não quebrar a UI
-      log(`Erro ao buscar contatos do banco: ${dbError}`, "whatsapp");
-      return [{
-        id: 0,
-        name: "Default Contact",
-        phoneNumber: "default",
-        profilePicUrl: null,
-        isGroup: false,
-        participants: [],
-        createdAt: new Date()
-      }];
     }
+    
+    log("Cliente WhatsApp não conectado ou erro na API, usando contato padrão", "whatsapp");
+    
+    // Retornar ao menos um contato padrão para evitar problemas na UI
+    return [{
+      id: 0,
+      name: "Sem contatos disponíveis",
+      phoneNumber: "default",
+      profilePicUrl: null,
+      isGroup: false,
+      participants: [],
+      createdAt: new Date()
+    }];
   } catch (error) {
-    log(`Erro ao obter contatos: ${error}`, "whatsapp");
-    // Retornamos array vazio em vez de lançar erro
-    return [];
+    log(`Erro geral ao obter contatos: ${error}`, "whatsapp");
+    return [{
+      id: 0,
+      name: "Erro ao carregar contatos",
+      phoneNumber: "default",
+      profilePicUrl: null,
+      isGroup: false,
+      participants: [],
+      createdAt: new Date()
+    }];
   }
 }
 
 // Get all groups
 export async function getGroups() {
   try {
-    // Mesmo que o cliente não esteja totalmente pronto, podemos tentar retornar grupos do banco
-    // ao invés de lançar um erro imediatamente
-    try {
-      // Verificação mais suave - se o cliente estiver pronto, perfeito
-      // se não, usamos o banco de dados de qualquer forma
-      if (client && client.info) {
-        log("Cliente WhatsApp pronto, obtendo grupos", "whatsapp");
-      } else {
-        log("Cliente WhatsApp não está pronto, usando apenas o banco de dados", "whatsapp");
+    if (client && client.info) {
+      log("Cliente WhatsApp pronto, obtendo grupos diretamente da API", "whatsapp");
+      
+      try {
+        // Obter grupos diretamente do WhatsApp Web
+        const chats = await client.getChats();
+        const groups = chats.filter(chat => chat.isGroup);
+        
+        log(`Obtidos ${groups.length} grupos diretamente do WhatsApp`, "whatsapp");
+        
+        // Transformar para o formato esperado pela aplicação
+        const formattedGroups = groups.map((group, index) => {
+          // Tentativa de obter participantes quando disponível
+          let participants: string[] = [];
+          try {
+            // Tentar diferentes propriedades dependendo da versão da API
+            if ((group as any)._data && (group as any)._data.participants) {
+              participants = (group as any)._data.participants.map((p: any) => p.id || '');
+            } else if ((group as any).participants) {
+              participants = (group as any).participants.map((p: any) => 
+                (p.id && p.id._serialized) ? p.id._serialized : (p.id || ''));
+            }
+          } catch (e) {
+            // Ignorar erros de participantes
+          }
+          
+          return {
+            id: 1000 + index, // IDs começando em 1000 para grupos para diferenciar de contatos
+            name: group.name || "Grupo sem nome",
+            phoneNumber: group.id._serialized,
+            profilePicUrl: null, // Grupos geralmente não têm API fácil para fotos
+            isGroup: true,
+            participants: participants,
+            createdAt: new Date()
+          };
+        });
+        
+        return formattedGroups;
+      } catch (apiError) {
+        log(`Erro ao obter grupos da API do WhatsApp: ${apiError}`, "whatsapp");
       }
-      
-      // Sempre retornamos o que temos no banco
-      const result = await db.query.contacts.findMany({
-        where: eq(contacts.isGroup, true),
-        orderBy: contacts.name
-      });
-      
-      // Se não temos grupos ainda, pelo menos retornamos um array vazio
-      // em vez de um erro 500
-      return result || [];
-    } catch (dbError) {
-      // Em caso de erro no banco, retornamos array vazio para não quebrar a UI
-      log(`Erro ao buscar grupos do banco: ${dbError}`, "whatsapp");
-      return [];
     }
+    
+    log("Cliente WhatsApp não conectado ou erro na API, usando array vazio de grupos", "whatsapp");
+    return [];
   } catch (error) {
-    log(`Erro ao obter grupos: ${error}`, "whatsapp");
-    // Retornamos array vazio em vez de lançar erro
+    log(`Erro geral ao obter grupos: ${error}`, "whatsapp");
     return [];
   }
 }
@@ -457,33 +515,110 @@ export async function getGroups() {
 export async function sendMessage(contactId: number, content: string, mediaUrls: string[] = []) {
   try {
     if (!client || !client.info) {
-      throw new Error("WhatsApp client is not ready");
+      throw new Error("Cliente WhatsApp não está pronto para enviar mensagens");
     }
     
-    // Get contact from database
-    const contact = await db.query.contacts.findFirst({
-      where: eq(contacts.id, contactId)
-    });
+    log(`Tentando enviar mensagem para contactId ${contactId}`, "whatsapp");
     
-    if (!contact) {
-      throw new Error("Contact not found");
+    // Primeiro tentamos obter o contato do banco de dados
+    let phoneNumber: string | null = null;
+    let foundContact = null;
+    
+    try {
+      foundContact = await db.query.contacts.findFirst({
+        where: eq(contacts.id, contactId)
+      });
+      
+      if (foundContact) {
+        phoneNumber = foundContact.phoneNumber;
+        log(`Encontrado contato no banco: ${foundContact.name}`, "whatsapp");
+      }
+    } catch (dbError) {
+      log(`Erro ao buscar contato no banco: ${dbError}`, "whatsapp");
+      // Continuamos mesmo com erro do banco
     }
     
-    // Send message to WhatsApp
-    const sent = await client.sendMessage(contact.phoneNumber, content);
+    // Se não encontramos no banco, vamos tentar buscar diretamente em memória
+    if (!phoneNumber) {
+      log("Contato não encontrado no banco, tentando API direta", "whatsapp");
+      
+      // Verificar se é um grupo (IDs de grupo começam em 1000)
+      if (contactId >= 1000) {
+        try {
+          const chats = await client.getChats();
+          const groups = chats.filter(chat => chat.isGroup);
+          
+          if (groups.length > 0) {
+            const groupIndex = contactId - 1000;
+            if (groupIndex >= 0 && groupIndex < groups.length) {
+              const group = groups[groupIndex];
+              phoneNumber = group.id._serialized;
+              log(`Encontrado grupo por índice: ${group.name}`, "whatsapp");
+            }
+          }
+        } catch (groupError) {
+          log(`Erro ao buscar grupo por índice: ${groupError}`, "whatsapp");
+        }
+      } else {
+        // É um contato individual
+        try {
+          const contacts = await client.getContacts();
+          const validContacts = contacts.filter(c => c.id?.user && c.id.user !== "status");
+          
+          if (validContacts.length > 0) {
+            const contactIndex = contactId;
+            if (contactIndex >= 0 && contactIndex < validContacts.length) {
+              const contact = validContacts[contactIndex];
+              phoneNumber = contact.id._serialized;
+              log(`Encontrado contato por índice: ${contact.name || contact.pushname}`, "whatsapp");
+            }
+          }
+        } catch (contactError) {
+          log(`Erro ao buscar contato por índice: ${contactError}`, "whatsapp");
+        }
+      }
+    }
     
-    // Store message in database
-    const [newMessage] = await db.insert(messages).values({
-      contactId: contact.id,
-      content: content,
-      fromMe: true,
-      status: "sent",
-      mediaUrls: mediaUrls
-    }).returning();
+    if (!phoneNumber) {
+      throw new Error(`Contato ou grupo não encontrado para o ID: ${contactId}`);
+    }
     
-    return newMessage;
+    log(`Enviando mensagem para o número: ${phoneNumber}`, "whatsapp");
+    
+    // Enviar a mensagem com o número de telefone obtido
+    const sent = await client.sendMessage(phoneNumber, content);
+    log("Mensagem enviada com sucesso!", "whatsapp");
+    
+    // Armazena a mensagem no banco
+    let messageRecord;
+    try {
+      const [newMessage] = await db.insert(messages).values({
+        contactId: contactId,
+        content: content,
+        fromMe: true,
+        status: "sent",
+        mediaUrls: mediaUrls
+      }).returning();
+      
+      messageRecord = newMessage;
+      log("Mensagem salva no banco de dados", "whatsapp");
+    } catch (dbError) {
+      log(`Erro ao salvar mensagem no banco: ${dbError}`, "whatsapp");
+      // Mesmo com erro no banco, continuamos e retornamos um objeto básico
+      messageRecord = {
+        id: 0,
+        contactId: contactId,
+        content: content,
+        fromMe: true,
+        status: "sent",
+        mediaUrls: mediaUrls,
+        createdAt: new Date()
+      };
+    }
+    
+    return messageRecord;
   } catch (error) {
-    log(`Error sending message: ${error}`, "whatsapp");
-    throw new Error(`Failed to send message: ${error}`);
+    log(`Erro ao enviar mensagem: ${error}`, "whatsapp");
+    throw new Error(`Falha ao enviar mensagem: ${error}`);
   }
 }

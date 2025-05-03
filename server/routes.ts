@@ -156,14 +156,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all contacts
   app.get("/api/contacts", async (req, res) => {
     try {
-      // Obtém o status de conexão, mas não bloqueia se não estiver conectado
-      const ready = await isClientReady();
-      
       const searchTerm = req.query.search as string || "";
       
-      // Sempre retornamos contatos, mesmo que não esteja conectado
-      // a função getContacts já foi modificada para lidar com isso
+      // Obtemos os contatos diretamente da API do WhatsApp se possível
       const contacts = await getContacts();
+      log(`Retornando ${contacts.length} contatos para o frontend`, "express");
       
       let filteredContacts = contacts;
       
@@ -171,6 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filteredContacts = contacts.filter(
           contact => contact.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
+        log(`Filtrado para ${filteredContacts.length} contatos com o termo "${searchTerm}"`, "express");
       }
       
       res.json(filteredContacts);
@@ -184,14 +182,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all groups
   app.get("/api/groups", async (req, res) => {
     try {
-      // Obtém o status de conexão, mas não bloqueia se não estiver conectado
-      const ready = await isClientReady();
-      
       const searchTerm = req.query.search as string || "";
       
-      // Sempre retornamos grupos, mesmo que não esteja conectado
-      // a função getGroups já foi modificada para lidar com isso
+      // Obtemos os grupos diretamente da API do WhatsApp se possível
       const groups = await getGroups();
+      log(`Retornando ${groups.length} grupos para o frontend`, "express");
       
       let filteredGroups = groups;
       
@@ -199,6 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filteredGroups = groups.filter(
           group => group.name?.toLowerCase().includes(searchTerm.toLowerCase())
         );
+        log(`Filtrado para ${filteredGroups.length} grupos com o termo "${searchTerm}"`, "express");
       }
       
       res.json(filteredGroups);
