@@ -354,46 +354,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
       
-      // Para cada mensagem agendada, buscar o contato correspondente
-      const scheduledWithContacts = await Promise.all(
-        scheduled.map(async (message) => {
-          try {
-            // Tentar obter o contato
-            let contact;
-            
-            // Se for um grupo (ID >= 1000), buscar nos grupos
-            if (message.contactId >= 1000) {
-              const groups = await getGroups();
-              const groupIndex = message.contactId - 1000;
-              contact = groupIndex >= 0 && groupIndex < groups.length 
-                ? groups[groupIndex] 
-                : { id: message.contactId, name: 'Grupo não encontrado', phoneNumber: 'desconhecido' };
-            } else {
-              // Buscar nos contatos regulares
-              const contacts = await getContacts();
-              contact = message.contactId < contacts.length 
-                ? contacts[message.contactId] 
-                : { id: message.contactId, name: 'Contato não encontrado', phoneNumber: 'desconhecido' };
+      // Como os dados já vêm com as relações de contato pelo Drizzle ORM,
+      // não precisamos fazer o mapeamento manual. Apenas garantimos que todos os campos necessários
+      // estejam preenchidos ou tenham valores padrão.
+      const scheduledWithContacts = scheduled.map(message => {
+        // Se por algum motivo o contato não for encontrado, definimos um contato padrão
+        if (!message.contact) {
+          return {
+            ...message,
+            contact: { 
+              id: message.contactId, 
+              name: 'Contato não encontrado', 
+              phoneNumber: 'desconhecido',
+              isGroup: false 
             }
-            
-            // Retornar a mensagem com o contato
-            return {
-              ...message,
-              contact
-            };
-          } catch (error) {
-            // Em caso de erro, usar um contato padrão
-            return {
-              ...message,
-              contact: { 
-                id: message.contactId, 
-                name: 'Erro ao carregar contato', 
-                phoneNumber: 'erro' 
-              }
-            };
-          }
-        })
-      );
+          };
+        }
+        
+        // Caso contrário, usamos o contato que já veio do banco de dados
+        return message;
+      });
       
       res.json(scheduledWithContacts);
       
