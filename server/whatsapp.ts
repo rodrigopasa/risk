@@ -585,8 +585,30 @@ export async function sendMessage(contactId: number, content: string, mediaUrls:
     
     log(`Enviando mensagem para o número: ${phoneNumber}`, "whatsapp");
     
-    // Enviar a mensagem com o número de telefone obtido
-    const sent = await client.sendMessage(phoneNumber, content);
+    // Remover tags HTML do conteúdo da mensagem
+    let cleanContent = content;
+    try {
+      // Remover tags <p> e </p> 
+      cleanContent = content.replace(/<\/?p>/g, '');
+      
+      // Remover outras tags HTML comuns
+      cleanContent = cleanContent.replace(/<\/?[^>]+(>|$)/g, '');
+      
+      // Substituir &nbsp; por espaço
+      cleanContent = cleanContent.replace(/&nbsp;/g, ' ');
+      
+      // Substituir <br> por quebra de linha
+      cleanContent = cleanContent.replace(/<br\s*\/?>/gi, '\n');
+      
+      log(`Conteúdo limpo: "${cleanContent}"`, "whatsapp");
+    } catch (parseError) {
+      log(`Erro ao limpar HTML do conteúdo: ${parseError}`, "whatsapp");
+      // Se houver erro, usamos o conteúdo original
+      cleanContent = content;
+    }
+    
+    // Enviar a mensagem com o número de telefone obtido e conteúdo limpo
+    const sent = await client.sendMessage(phoneNumber, cleanContent);
     log("Mensagem enviada com sucesso!", "whatsapp");
     
     // Armazena a mensagem no banco

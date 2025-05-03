@@ -196,6 +196,7 @@ function scheduleMessageJob(message: ScheduledMessage) {
           log(`Executing scheduled message ${message.id}`, 'scheduler');
           
           // Send the message
+          // O servidor whatsapp.ts já vai limpar as tags HTML do conteúdo
           await sendMessage(
             message.contactId,
             message.content,
