@@ -211,39 +211,100 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
     setShowAttachmentMenu(false);
   };
   
-  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Função para redimensionar imagens e reduzir a qualidade
+  const resizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (!event.target?.result) {
+          return reject(new Error("Falha ao ler arquivo"));
+        }
+        
+        const img = new Image();
+        img.onload = () => {
+          // Definir dimensão máxima (1200px para manter qualidade razoável)
+          const MAX_SIZE = 1200;
+          let width = img.width;
+          let height = img.height;
+          
+          // Calcular nova dimensão mantendo proporção
+          if (width > height && width > MAX_SIZE) {
+            height = (height * MAX_SIZE) / width;
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width = (width * MAX_SIZE) / height;
+            height = MAX_SIZE;
+          }
+          
+          // Criar canvas para redimensionar
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Desenhar imagem redimensionada
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return reject(new Error("Contexto 2D não disponível"));
+          
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Converter para JPEG com 75% de qualidade para reduzir tamanho
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+          resolve(dataUrl);
+        };
+        
+        img.onerror = () => reject(new Error("Falha ao carregar imagem"));
+        img.src = event.target.result as string;
+      };
+      
+      reader.onerror = () => reject(new Error("Falha ao ler arquivo"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
     const file = files[0];
-    const reader = new FileReader();
     
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        const dataUrl = event.target.result as string;
-        setMediaFiles([...mediaFiles, dataUrl]);
-        setShowMediaPreview(true);
-        setShowFileUploadModal(false);
-        
+    try {
+      // Mostrar toast de "processando" para arquivos grandes
+      if (file.size > 1000000) { // 1MB
         toast({
-          title: "Arquivo anexado",
-          description: `${file.name} foi anexado e será enviado com a mensagem`,
+          title: "Processando arquivo",
+          description: "Arquivos grandes podem levar alguns segundos...",
         });
       }
-    };
-    
-    reader.onerror = (error) => {
+      
+      let dataUrl;
+      
+      // Se for imagem, redimensionar para reduzir tamanho
+      if (fileType === "image" && file.type.startsWith("image/")) {
+        dataUrl = await resizeImage(file);
+      } else {
+        // Para outros tipos, ler normalmente
+        dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      setMediaFiles([...mediaFiles, dataUrl]);
+      setShowMediaPreview(true);
+      setShowFileUploadModal(false);
+      
       toast({
-        title: "Erro ao carregar arquivo",
-        description: "Não foi possível ler o arquivo selecionado",
+        title: "Arquivo anexado",
+        description: `${file.name} foi anexado e será enviado com a mensagem`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao processar arquivo",
+        description: "Não foi possível processar o arquivo selecionado",
         variant: "destructive",
       });
-    };
-    
-    if (fileType === "image") {
-      reader.readAsDataURL(file);
-    } else {
-      reader.readAsDataURL(file);
     }
   };
   

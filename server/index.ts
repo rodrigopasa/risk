@@ -3,9 +3,16 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-// Aumentar limite de tamanho para permitir imagens maiores (50MB)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+// Aumentar limite de tamanho para permitir imagens maiores (100MB)
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: false, limit: '100mb' }));
+
+// Configurar limites maiores para payloads
+app.use((req, res, next) => {
+  // Aumentar o timeout para 5 minutos para uploads grandes
+  req.setTimeout(300000);
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
