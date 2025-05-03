@@ -80,12 +80,28 @@ export const storage = {
   },
   
   async getAllScheduledMessages() {
-    return await db.query.scheduledMessages.findMany({
-      orderBy: asc(scheduledMessages.scheduledTime),
-      with: {
-        contact: true
+    try {
+      log("Buscando todas as mensagens agendadas com contatos...", "storage");
+      
+      const messages = await db.query.scheduledMessages.findMany({
+        orderBy: asc(scheduledMessages.scheduledTime),
+        with: {
+          contact: true
+        }
+      });
+      
+      log(`Encontradas ${messages.length} mensagens agendadas`, "storage");
+      
+      // Log para debug
+      for (const msg of messages) {
+        log(`Mensagem ID: ${msg.id}, ContactID: ${msg.contactId}, Contato: ${msg.contact ? 'encontrado' : 'não encontrado'}`, "storage");
       }
-    });
+      
+      return messages;
+    } catch (error) {
+      log(`Erro ao buscar mensagens agendadas: ${error}`, "storage");
+      return [];
+    }
   },
   
   async insertScheduledMessage(messageData: any) {

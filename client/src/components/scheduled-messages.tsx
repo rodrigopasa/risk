@@ -145,11 +145,15 @@ export default function ScheduledMessages({ onClose }: ScheduledMessagesProps) {
                       <div className="flex items-center">
                         <div className={`flex-shrink-0 h-8 w-8 rounded-full ${message.contact?.isGroup ? 'bg-pazap-dark-blue' : 'bg-pazap-dark-orange'} text-white flex items-center justify-center`}>
                           <span className="text-xs">
-                            {message.contact?.name?.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || 'N/A'}
+                            {message.contact && message.contact.name 
+                              ? message.contact.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() 
+                              : 'N/A'}
                           </span>
                         </div>
                         <div className="ml-2">
-                          <div className="text-sm font-medium text-pazap-dark-text">{message.contact?.name || 'Destinatário'}</div>
+                          <div className="text-sm font-medium text-pazap-dark-text">
+                            {message.contact?.name || `Contato #${message.contactId}`}
+                          </div>
                         </div>
                       </div>
                     </TableCell>

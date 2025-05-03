@@ -369,7 +369,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: 'Contato não encontrado', 
             phoneNumber: 'desconhecido',
             isGroup: false,
-            participants: [],
+            profilePicUrl: null,
+            participants: null,
             createdAt: new Date()
           };
           log(`Usando contato padrão para mensagem ${message.id}`, "express");
