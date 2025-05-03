@@ -39,14 +39,16 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async (data: { content: string; mediaUrls?: string[] }) => {
       return apiRequest("POST", "/api/messages/send", {
         contactId: contact.id,
-        content,
+        content: data.content,
+        mediaUrls: data.mediaUrls || [],
       });
     },
     onSuccess: () => {
       setMessage("");
+      setMediaFiles([]);
       queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
       toast({
         title: "Mensagem enviada",
@@ -119,23 +121,26 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
   }, []);
 
   const handleSendMessage = () => {
-    if (!message.trim()) return;
+    if (!message.trim() && mediaFiles.length === 0) return;
     
     // Extract text content from HTML
     const div = document.createElement('div');
     div.innerHTML = message;
     const textContent = div.textContent || div.innerText || '';
     
-    if (!textContent.trim()) {
+    if (!textContent.trim() && mediaFiles.length === 0) {
       toast({
         title: "Mensagem vazia",
-        description: "Por favor, digite uma mensagem",
+        description: "Por favor, digite uma mensagem ou anexe um arquivo",
         variant: "destructive",
       });
       return;
     }
     
-    sendMessageMutation.mutate(message);
+    sendMessageMutation.mutate({
+      content: message,
+      mediaUrls: mediaFiles
+    });
   };
 
   const handleScheduleMessage = () => {
@@ -177,13 +182,56 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
     }
   };
 
-  const handleAttachImage = () => {
-    // Mock implementation - would be replaced with actual file picker
-    toast({
-      title: "Funcionalidade não implementada",
-      description: "O anexo de imagens será implementado em uma versão futura",
-    });
+  const handleOpenFileUpload = (type: "image" | "document" | "contact") => {
+    setFileType(type);
+    setShowFileUploadModal(true);
     setShowAttachmentMenu(false);
+  };
+  
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        const dataUrl = event.target.result as string;
+        setMediaFiles([...mediaFiles, dataUrl]);
+        setShowMediaPreview(true);
+        setShowFileUploadModal(false);
+        
+        toast({
+          title: "Arquivo anexado",
+          description: `${file.name} foi anexado e será enviado com a mensagem`,
+        });
+      }
+    };
+    
+    reader.onerror = (error) => {
+      toast({
+        title: "Erro ao carregar arquivo",
+        description: "Não foi possível ler o arquivo selecionado",
+        variant: "destructive",
+      });
+    };
+    
+    if (fileType === "image") {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleRemoveMedia = (index: number) => {
+    const newMediaFiles = [...mediaFiles];
+    newMediaFiles.splice(index, 1);
+    setMediaFiles(newMediaFiles);
+    
+    if (newMediaFiles.length === 0) {
+      setShowMediaPreview(false);
+    }
   };
 
   const modules = {
@@ -198,10 +246,39 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
   return (
     <>
       <div className="bg-white p-3 border-t border-gray-300">
+        {/* Media preview area */}
+        {showMediaPreview && mediaFiles.length > 0 && (
+          <div className="mb-3 overflow-x-auto whitespace-nowrap">
+            <div className="flex space-x-2">
+              {mediaFiles.map((file, index) => (
+                <div key={index} className="relative">
+                  <div className="w-20 h-20 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden">
+                    {file.startsWith('data:image') ? (
+                      <img 
+                        src={file} 
+                        alt={`Preview ${index}`} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <FileText className="h-10 w-10 text-gray-500" />
+                    )}
+                  </div>
+                  <button
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full"
+                    onClick={() => handleRemoveMedia(index)}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-end space-x-2">
           {/* Attachment Button */}
           <button 
-            className="p-2 text-gray-500 hover:text-whatsapp-green transition-colors"
+            className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
             onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
             data-attachment-button="true"
           >
@@ -210,7 +287,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
 
           {/* Emoji Button */}
           <button 
-            className="p-2 text-gray-500 hover:text-whatsapp-green transition-colors"
+            className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             data-emoji-button="true"
           >
@@ -254,28 +331,28 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
                   <div className="grid grid-cols-3 gap-2">
                     <button 
                       className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
-                      onClick={handleAttachImage}
+                      onClick={() => handleOpenFileUpload("image")}
                     >
                       <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mb-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-whatsapp-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <Image className="h-5 w-5 text-green-600" />
                       </div>
                       <span className="text-xs">Imagem</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button 
+                      className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                      onClick={() => handleOpenFileUpload("document")}
+                    >
                       <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+                        <FileText className="h-5 w-5 text-purple-600" />
                       </div>
                       <span className="text-xs">Documento</span>
                     </button>
-                    <button className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button 
+                      className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                      onClick={() => handleOpenFileUpload("contact")}
+                    >
                       <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+                        <User className="h-5 w-5 text-blue-600" />
                       </div>
                       <span className="text-xs">Contato</span>
                     </button>
@@ -287,7 +364,7 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
 
           {/* Schedule Button */}
           <button 
-            className="p-2 text-gray-500 hover:text-whatsapp-green transition-colors"
+            className="p-2 text-gray-500 hover:text-orange-500 transition-colors"
             onClick={() => setShowScheduleModal(true)}
           >
             <Clock className="h-6 w-6" />
@@ -295,14 +372,23 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
 
           {/* Send Button */}
           <button 
-            className="p-2 text-white bg-whatsapp-green rounded-full hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 text-white bg-orange-500 rounded-full hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSendMessage}
-            disabled={!message.trim() || sendMessageMutation.isPending}
+            disabled={(!message.trim() && mediaFiles.length === 0) || sendMessageMutation.isPending}
           >
             <Check className="h-6 w-6" />
           </button>
         </div>
       </div>
+      
+      {/* Hidden file input for uploads */}
+      <input 
+        type="file" 
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileSelected}
+        accept={fileType === "image" ? "image/*" : fileType === "document" ? ".pdf,.doc,.docx,.txt,.xls,.xlsx" : "*"}
+      />
 
       {/* Schedule Modal */}
       <Dialog open={showScheduleModal} onOpenChange={setShowScheduleModal}>
@@ -355,9 +441,57 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
             <Button 
               onClick={handleScheduleMessage}
               disabled={!message.trim() || !scheduledDate || !scheduledTime || scheduleMessageMutation.isPending}
-              className="bg-whatsapp-green hover:bg-opacity-90 text-white"
+              className="bg-orange-500 hover:bg-opacity-90 text-white"
             >
               Agendar Mensagem
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Upload Modal */}
+      <Dialog open={showFileUploadModal} onOpenChange={setShowFileUploadModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {fileType === "image" ? "Anexar Imagem" : 
+               fileType === "document" ? "Anexar Documento" : 
+               "Anexar Contato"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="file">{fileType === "image" ? "Selecione uma imagem" : 
+               fileType === "document" ? "Selecione um documento" : 
+               "Selecione um arquivo de contato"}</Label>
+              <div className="flex items-center justify-center w-full">
+                <label 
+                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    {fileType === "image" ? <Image className="w-10 h-10 mb-3 text-gray-400" /> :
+                     fileType === "document" ? <FileText className="w-10 h-10 mb-3 text-gray-400" /> :
+                     <User className="w-10 h-10 mb-3 text-gray-400" />}
+                    <p className="mb-2 text-sm text-gray-500">
+                      <span className="font-semibold">Clique para selecionar</span> ou arraste e solte
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {fileType === "image" ? "PNG, JPG ou GIF" : 
+                       fileType === "document" ? "PDF, DOC, TXT ou XLS" : 
+                       "VCF ou CSV"}
+                    </p>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowFileUploadModal(false)}
+            >
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>
