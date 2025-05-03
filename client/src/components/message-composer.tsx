@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Paperclip, Smile, Clock, Check } from "lucide-react";
+import { Paperclip, Smile, Clock, Check, X, Image, FileText, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -26,9 +26,15 @@ export default function MessageComposer({ contact }: MessageComposerProps) {
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
   const [recurring, setRecurring] = useState("none");
+  const [mediaFiles, setMediaFiles] = useState<string[]>([]);
+  const [showMediaPreview, setShowMediaPreview] = useState(false);
+  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
+  const [fileType, setFileType] = useState<"image" | "document" | "contact" | null>(null);
+  
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const attachmentMenuRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<ReactQuill>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   // Send message mutation

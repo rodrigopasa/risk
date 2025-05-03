@@ -607,8 +607,71 @@ export async function sendMessage(contactId: number, content: string, mediaUrls:
       cleanContent = content;
     }
     
-    // Enviar a mensagem com o número de telefone obtido e conteúdo limpo
-    const sent = await client.sendMessage(phoneNumber, cleanContent);
+    // Verificar se há arquivos de mídia para enviar
+    let sent;
+    
+    if (mediaUrls && mediaUrls.length > 0) {
+      log(`Enviando ${mediaUrls.length} arquivos de mídia`, "whatsapp");
+      
+      // Enviar cada arquivo de mídia com a mensagem
+      for (const mediaUrl of mediaUrls) {
+        try {
+          log(`Enviando mídia: ${mediaUrl}`, "whatsapp");
+          
+          // Se começa com data:, é uma imagem base64
+          if (mediaUrl.startsWith('data:')) {
+            // Extrair o tipo de mídia e os dados base64
+            const match = mediaUrl.match(/^data:([^;]+);base64,(.+)$/);
+            if (match) {
+              const [, mimeType, base64Data] = match;
+              const mediaData = Buffer.from(base64Data, 'base64');
+              
+              // Verificar tipo de mídia
+              if (mimeType.startsWith('image/')) {
+                sent = await client.sendMessage(phoneNumber, {
+                  body: cleanContent,
+                  media: mediaData
+                });
+                log(`Imagem enviada com sucesso: ${mimeType}`, "whatsapp");
+              } else if (mimeType.startsWith('application/') || mimeType.startsWith('text/')) {
+                // Tentar enviar como documento
+                sent = await client.sendMessage(phoneNumber, {
+                  body: cleanContent,
+                  media: mediaData,
+                  // Se possível, determinar o nome do arquivo baseado no conteúdo
+                  filename: `documento.${mimeType.split('/')[1] || 'file'}`
+                });
+                log(`Documento enviado com sucesso: ${mimeType}`, "whatsapp");
+              } else {
+                // Mídia não reconhecida, tentar enviar como arquivo genérico
+                sent = await client.sendMessage(phoneNumber, {
+                  body: cleanContent,
+                  media: mediaData
+                });
+                log(`Mídia enviada como arquivo genérico: ${mimeType}`, "whatsapp");
+              }
+            } else {
+              throw new Error("Formato de dados base64 inválido");
+            }
+          } else {
+            // URL externa, podemos tentar baixar e enviar
+            sent = await client.sendMessage(phoneNumber, {
+              body: cleanContent,
+              media: mediaUrl
+            });
+            log(`Mídia enviada via URL: ${mediaUrl}`, "whatsapp");
+          }
+        } catch (mediaError) {
+          log(`Erro ao enviar mídia ${mediaUrl}: ${mediaError}`, "whatsapp");
+          // Em caso de erro com a mídia, enviamos pelo menos o texto
+          sent = await client.sendMessage(phoneNumber, cleanContent);
+        }
+      }
+    } else {
+      // Sem mídia, apenas enviar o texto
+      sent = await client.sendMessage(phoneNumber, cleanContent);
+    }
+    
     log("Mensagem enviada com sucesso!", "whatsapp");
     
     // Armazena a mensagem no banco

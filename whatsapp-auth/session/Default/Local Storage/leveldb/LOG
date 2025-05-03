@@ -1,3 +1,3 @@
-2025/05/03-01:48:33.240 cd6 Reusing MANIFEST /home/runner/workspace/whatsapp-auth/session/Default/Local Storage/leveldb/MANIFEST-000001
-2025/05/03-01:48:33.303 cd6 Recovering log #3
-2025/05/03-01:48:33.306 cd6 Reusing old log /home/runner/workspace/whatsapp-auth/session/Default/Local Storage/leveldb/000003.log 
+2025/05/03-01:51:09.032 f00 Reusing MANIFEST /home/runner/workspace/whatsapp-auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2025/05/03-01:51:09.072 f00 Recovering log #3
+2025/05/03-01:51:09.075 f00 Reusing old log /home/runner/workspace/whatsapp-auth/session/Default/Local Storage/leveldb/000003.log 
