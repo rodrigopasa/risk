@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { 
   Dialog, 
@@ -53,10 +53,24 @@ export default function ScheduledMessages({ onClose }: ScheduledMessagesProps) {
   const { 
     data: scheduledMessages = [], 
     isLoading,
-    error
+    error,
+    refetch
   } = useQuery<ScheduledMessageWithContact[]>({
     queryKey: ['/api/messages/scheduled'],
   });
+  
+  // Efeito para registrar logs
+  useEffect(() => {
+    console.log("Mensagens agendadas carregadas:", scheduledMessages);
+    if (error) {
+      console.error("Erro ao carregar mensagens agendadas:", error);
+    }
+  }, [scheduledMessages, error]);
+  
+  // Forçar refetch quando o componente for montado
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   // Delete scheduled message mutation
   const deleteScheduledMessageMutation = useMutation({
