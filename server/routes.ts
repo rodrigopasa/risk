@@ -18,6 +18,9 @@ import {
   getAllScheduledMessages 
 } from "./scheduler";
 import { scheduledMessagesInsertSchema } from "@shared/schema";
+import { saveApiKey, getApiConfig } from "./services/openai";
+import { saveGoogleCredentials, getGoogleConfig, checkGoogleConnection, createCalendarEvent } from "./services/google";
+import { saveAutoResponderConfig, getAutoResponderConfig, getAutoRespondingContacts, processIncomingMessage, getDefaultClinicTemplates } from "./services/auto-responder";
 import { WebSocketServer, WebSocket } from "ws";
 import { log } from "./vite";
 
