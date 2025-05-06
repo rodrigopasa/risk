@@ -83,9 +83,14 @@ export const storage = {
     try {
       log("Buscando todas as mensagens agendadas do banco de dados...", "storage");
       
-      const messages = await db.select().from(scheduledMessages);
+      // Consultando mensagens agendadas com informações dos contatos
+      const messages = await db.query.scheduledMessages.findMany({
+        with: {
+          contact: true
+        }
+      });
       
-      log(`Encontradas ${messages.length} mensagens agendadas`, "storage");
+      log(`Encontradas ${messages.length} mensagens agendadas com informações de contato`, "storage");
       return messages;
     } catch (error) {
       if (error instanceof Error) {

@@ -344,51 +344,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       log("Carregando mensagens agendadas...", "express");
       
-      // Para fins de teste, usar dados hardcoded para garantir exibição no frontend
-      // após debugar o problema com dados dinâmicos
-      const mockMessages = [
-        {
-          id: 1,
-          contactId: 1,
-          content: "Olá! Lembrete sobre nossa reunião amanhã",
-          mediaUrls: null,
-          scheduledTime: "2025-05-03T09:00:00.000Z",
-          recurring: "none",
-          status: "pending",
-          createdAt: "2025-05-02T02:28:02.304Z",
-          contact: {
-            id: 1,
-            name: "João da Silva",
-            phoneNumber: "5511912345678",
-            profilePicUrl: null,
-            isGroup: false,
-            participants: null,
-            createdAt: "2025-05-02T02:28:02.072Z"
-          }
-        },
-        {
-          id: 2,
-          contactId: 3,
-          content: "Relatório semanal de desempenho da campanha",
-          mediaUrls: null,
-          scheduledTime: "2025-05-09T15:30:00.000Z",
-          recurring: "weekly",
-          status: "pending",
-          createdAt: "2025-05-02T02:28:02.304Z",
-          contact: {
-            id: 3,
-            name: "Time Marketing",
-            phoneNumber: "551123456789-group",
-            profilePicUrl: null,
-            isGroup: true,
-            participants: ["5511912345678", "5511987654321"],
-            createdAt: "2025-05-02T02:28:02.072Z"
-          }
-        }
-      ];
+      // Obter mensagens agendadas reais do banco de dados
+      const scheduledMessages = await getAllScheduledMessages();
       
-      log(`Enviando ${mockMessages.length} mensagens agendadas para debug`, "express");
-      return res.json(mockMessages);
+      log(`Encontradas ${scheduledMessages.length} mensagens agendadas`, "express");
+      log(`Enviando ${scheduledMessages.length} mensagens agendadas para o frontend`, "express");
+      return res.json(scheduledMessages);
     } catch (error: any) {
       log(`Erro ao obter mensagens agendadas: ${error.message}`, "express");
       // Retornar array vazio em vez de erro 500
