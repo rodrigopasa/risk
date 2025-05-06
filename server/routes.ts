@@ -38,7 +38,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up WebSocket server for real-time updates
   const wss = new WebSocketServer({ 
     server: httpServer,
-    path: '/ws'  // Alterando para um caminho mais simples
+    path: '/ws',  // Alterando para um caminho mais simples
+    // Adicionando opções para lidar com erros de certificado em produção
+    clientTracking: true,
+    perMessageDeflate: true
+  });
+  
+  // Adicionar handler de erro para o servidor WebSocket
+  wss.on('error', (error) => {
+    log(`Erro no servidor WebSocket: ${error}`, "websocket");
+    if (error.code === 'ERR_TLS_CERT_ALTNAME_INVALID') {
+      log("Erro de certificado TLS detectado. Isso pode ser ignorado em ambiente de desenvolvimento.", "websocket");
+    }
   });
   
   // Disponibilize globalmente o WebSocketServer para que outros módulos possam acessá-lo
@@ -345,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       log("Carregando mensagens agendadas...", "express");
       
       // Obter mensagens agendadas reais do banco de dados
-      const scheduledMessages = await getAllScheduledMessages();
+      const scheduledMessages = await storage.getAllScheduledMessages();
       
       log(`Encontradas ${scheduledMessages.length} mensagens agendadas`, "express");
       log(`Enviando ${scheduledMessages.length} mensagens agendadas para o frontend`, "express");
