@@ -63,7 +63,20 @@ export async function initializeWhatsApp(
       authStrategy: new LocalAuth({ dataPath: "./whatsapp-auth" }),
       puppeteer: {
         headless: true,
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
+        // Usar o caminho do nix store ou o padrão do puppeteer para chromium
+        executablePath: (() => {
+          // Verificar se estamos em ambiente de produção
+          if (process.env.NODE_ENV === 'production') {
+            // Em produção, deixar o puppeteer usar o caminho padrão
+            log("Executando em produção, usando caminho padrão do puppeteer", "whatsapp");
+            return undefined;
+          }
+          
+          // Em desenvolvimento, usar o caminho do nix store se tiver
+          const nixStorePath = '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium';
+          log(`Executando em desenvolvimento, tentando usar caminho: ${nixStorePath}`, "whatsapp");
+          return nixStorePath;
+        })(),
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
