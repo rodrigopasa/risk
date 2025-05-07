@@ -45,10 +45,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Adicionar handler de erro para o servidor WebSocket
-  wss.on('error', (error) => {
+  wss.on('error', (error: any) => {
     log(`Erro no servidor WebSocket: ${error}`, "websocket");
     if (error.code === 'ERR_TLS_CERT_ALTNAME_INVALID') {
       log("Erro de certificado TLS detectado. Isso pode ser ignorado em ambiente de desenvolvimento.", "websocket");
+      // Se for erro de certificado, podemos continuar a operação do WebSocket
+      // O erro já foi tratado pela configuração global em railway-helper.ts
     }
   });
   
