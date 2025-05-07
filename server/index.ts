@@ -1,6 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { configureWebSocketForRailway } from "../db/railway-helper"; 
+
+// Configurar WebSocket para ambiente Railway, se necessário
+configureWebSocketForRailway();
 
 const app = express();
 // Aumentar limite de tamanho para permitir imagens maiores (100MB)
